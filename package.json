@@ -1,0 +1,24 @@
+{
+  "name": "seaside-cruizers",
+  "version": "1.0.0",
+  "description": "",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Ill-Eagle-Official/seaside-cruizers.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Ill-Eagle-Official/seaside-cruizers/issues"
+  },
+  "homepage": "https://github.com/Ill-Eagle-Official/seaside-cruizers#readme",
+  "dependencies": {
+    "stripe": "^18.2.1"
+  }
+}

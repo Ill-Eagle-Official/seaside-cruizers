@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Seaside Cruizers Car Show Registration</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+  <main>
+    <h1>Father's Day Weekend Car Show Registration</h1>
+    <form id="registrationForm" novalidate>
+      <fieldset>
+        <legend>Personal Information</legend>
+        <div class="form-group">
+          <label for="firstName">First Name *</label>
+          <input type="text" id="firstName" name="firstName" required>
+        </div>
+        <div class="form-group">
+          <label for="lastName">Last Name *</label>
+          <input type="text" id="lastName" name="lastName" required>
+        </div>
+        <div class="form-group">
+          <label for="email">Email Address *</label>
+          <input type="email" id="email" name="email" required>
+        </div>
+        <div class="form-group">
+          <label for="country">Country *</label>
+          <input type="text" id="country" name="country" required>
+        </div>
+        <div class="form-group">
+          <label for="province">Province/State *</label>
+          <input type="text" id="province" name="province" required>
+        </div>
+        <div class="form-group">
+          <label for="city">City *</label>
+          <input type="text" id="city" name="city" required>
+        </div>
+        <div class="form-group">
+          <label for="postalCode">Postal Code / ZIP *</label>
+          <input type="text" id="postalCode" name="postalCode" required>
+        </div>
+      </fieldset>
+      <fieldset>
+        <legend>Car Information</legend>
+        <div class="form-group">
+          <label for="make">Make *</label>
+          <input type="text" id="make" name="make" required>
+        </div>
+        <div class="form-group">
+          <label for="model">Model *</label>
+          <input type="text" id="model" name="model" required>
+        </div>
+        <div class="form-group">
+          <label for="year">Year *</label>
+          <input type="number" id="year" name="year" min="1900" max="2099" pattern="\d{4}" required>
+        </div>
+      </fieldset>
+      <fieldset>
+        <legend>Car Club Affiliation (Optional)</legend>
+        <div class="form-group">
+          <label for="clubName">Club Name</label>
+          <input type="text" id="clubName" name="clubName">
+        </div>
+      </fieldset>
+      <fieldset>
+        <legend>Swag Purchase Options (Optional)</legend>
+        <div class="form-group">
+          <input type="checkbox" id="buyHat" name="buyHat">
+          <label for="buyHat">Buy a Hat ($15)</label>
+        </div>
+        <div id="hatOptions" class="swag-options" style="display:none;">
+          <div class="form-group">
+            <label>Hat Colour</label>
+            <select id="hatColour" name="hatColour">
+              <option value="">Select Colour</option>
+              <option value="Red">Red</option>
+              <option value="Blue">Blue</option>
+              <option value="Black">Black</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Hat Size</label>
+            <select id="hatSize" name="hatSize">
+              <option value="">Select Size</option>
+              <option value="S">S</option>
+              <option value="M">M</option>
+              <option value="L">L</option>
+              <option value="XL">XL</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <input type="checkbox" id="buyShirt" name="buyShirt">
+          <label for="buyShirt">Buy a Shirt ($20)</label>
+        </div>
+        <div id="shirtOptions" class="swag-options" style="display:none;">
+          <div class="form-group">
+            <label>Shirt Colour</label>
+            <select id="shirtColour" name="shirtColour">
+              <option value="">Select Colour</option>
+              <option value="White">White</option>
+              <option value="Grey">Grey</option>
+              <option value="Black">Black</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Shirt Gender Cut</label>
+            <select id="shirtGender" name="shirtGender">
+              <option value="">Select Cut</option>
+              <option value="Men's">Men's</option>
+              <option value="Women's">Women's</option>
+              <option value="Unisex">Unisex</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Shirt Size</label>
+            <select id="shirtSize" name="shirtSize">
+              <option value="">Select Size</option>
+              <option value="S">S</option>
+              <option value="M">M</option>
+              <option value="L">L</option>
+              <option value="XL">XL</option>
+              <option value="XXL">XXL</option>
+            </select>
+          </div>
+        </div>
+      </fieldset>
+      <fieldset>
+        <legend>Summary & Pricing</legend>
+        <div class="summary">
+          <p>Base Registration Fee: <span id="baseFee">$30</span></p>
+          <p>Hat: <span id="hatFee">$0</span></p>
+          <p>Shirt: <span id="shirtFee">$0</span></p>
+          <hr>
+          <p><strong>Total Amount Due: <span id="totalFee">$30</span></strong></p>
+        </div>
+      </fieldset>
+      <div class="form-actions">
+        <button type="submit" id="payNow">Pay Now</button>
+      </div>
+    </form>
+    <div id="successMessage" class="hidden">
+      <h2>Thank you, <span id="userFirstName"></span>! Your registration is complete.</h2>
+      <p>A confirmation email has been sent to you.</p>
+    </div>
+    <div id="errorMessage" class="hidden">
+      <h2>Payment Failed or Cancelled</h2>
+      <p>There was a problem processing your payment. Please try again.</p>
+    </div>
+  </main>
+  <script src="main.js"></script>
+</body>
+
+</html>
