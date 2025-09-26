@@ -6,11 +6,113 @@ require('dotenv').config();
 const Stripe = require('stripe');
 const nodemailer = require('nodemailer');
 const getRawBody = require('raw-body');
+const { google } = require('googleapis');
 
 const app = express();
 const stripe = Stripe(process.env.STRIPE_SECRET_KEY);
 
 app.use(cors());
+
+// Google Sheets setup
+let sheets = null;
+let auth = null;
+(function initializeGoogleSheets() {
+  try {
+    let credentialsString = process.env.GOOGLE_SHEETS_CREDENTIALS || '';
+
+    // Support base64-encoded credentials to avoid JSON escaping issues
+    if (!credentialsString && process.env.GOOGLE_SHEETS_CREDENTIALS_B64) {
+      credentialsString = Buffer.from(process.env.GOOGLE_SHEETS_CREDENTIALS_B64, 'base64').toString('utf8');
+    }
+
+    if (process.env.GOOGLE_APPLICATION_CREDENTIALS && !credentialsString) {
+      // Use key file path if provided
+      auth = new google.auth.GoogleAuth({
+        keyFile: process.env.GOOGLE_APPLICATION_CREDENTIALS,
+        scopes: ['https://www.googleapis.com/auth/spreadsheets'],
+      });
+      sheets = google.sheets('v4');
+      console.log('Google Sheets integration enabled via key file');
+      return;
+    }
+
+    if (credentialsString) {
+      const parsed = JSON.parse(credentialsString);
+      auth = new google.auth.GoogleAuth({
+        credentials: parsed,
+        scopes: ['https://www.googleapis.com/auth/spreadsheets'],
+      });
+      sheets = google.sheets('v4');
+      console.log('Google Sheets integration enabled');
+    } else {
+      console.log('Google Sheets integration disabled - credentials not set');
+    }
+  } catch (err) {
+    console.log('Google Sheets integration disabled - invalid credentials');
+  }
+})();
+
+// Helper: Add registration to Google Sheets
+async function addToGoogleSheets(data, session) {
+  if (!sheets || !auth) {
+    console.log('Skipping Google Sheets - not configured');
+    return;
+  }
+  try {
+    const hat = data.buyHat === 'true' || data.buyHat === true;
+    const shirt = data.buyShirt === 'true' || data.buyShirt === true;
+    const timestamp = new Date().toLocaleString('en-US', { timeZone: 'America/Los_Angeles' });
+    
+    const row = [
+      timestamp,
+      `${data.firstName} ${data.lastName}`,
+      data.email,
+      data.country || '',
+      data.province || '',
+      data.city || '',
+      data.postalCode || '',
+      `${data.year} ${data.make} ${data.model}`,
+      data.clubName || 'None',
+      hat ? 'Yes' : 'No',
+      hat ? data.hatColour : '',
+      hat ? data.hatSize : '',
+      shirt ? 'Yes' : 'No',
+      shirt ? data.shirtColour : '',
+      shirt ? data.shirtGender : '',
+      shirt ? data.shirtSize : '',
+      30, // Base fee
+      hat ? 15 : 0, // Hat price
+      shirt ? 20 : 0, // Shirt price
+      (session.amount_total / 100).toFixed(2), // Total paid
+      session.payment_intent // Payment ID
+    ];
+
+    // Use a more compatible approach for the Google Sheets API
+    const authClient = await auth.getClient();
+    
+    // Use the raw fetch API approach to avoid Headers issues
+    const accessToken = await authClient.getAccessToken();
+    
+    const response = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${process.env.GOOGLE_SHEETS_ID}/values/Sheet1!A:U:append?valueInputOption=USER_ENTERED`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${accessToken.token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        values: [row]
+      })
+    });
+    
+    if (!response.ok) {
+      throw new Error(`Google Sheets API error: ${response.status} ${response.statusText}`);
+    }
+    
+    console.log('Registration added to Google Sheets for', data.firstName, data.lastName);
+  } catch (err) {
+    console.error('Failed to add registration to Google Sheets:', err);
+  }
+}
 
 // Stripe webhook endpoint
 app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res) => {
@@ -26,18 +128,34 @@ app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res)
   if (event.type === 'checkout.session.completed') {
     const session = event.data.object;
     const data = session.metadata || {};
+    
+    // Run both email and Google Sheets operations in parallel
+    const promises = [];
+    
+    // Send email
     try {
-      // Send email
       const email = formatEmail(data, session);
-      await transporter.sendMail({
-        from: process.env.GMAIL_USER,
-        to: process.env.GMAIL_USER, // or a different admin/club email
-        subject: email.subject,
-        text: email.text,
-      });
-      console.log('Registration email sent for', data.firstName, data.lastName);
+      promises.push(
+        transporter.sendMail({
+          from: process.env.GMAIL_USER,
+          to: process.env.GMAIL_USER, // or a different admin/club email
+          subject: email.subject,
+          text: email.text,
+        })
+      );
     } catch (err) {
-      console.error('Failed to send registration email:', err);
+      console.error('Failed to prepare email:', err);
+    }
+    
+    // Add to Google Sheets
+    promises.push(addToGoogleSheets(data, session));
+    
+    // Execute both operations
+    try {
+      await Promise.allSettled(promises);
+      console.log('Registration processed for', data.firstName, data.lastName);
+    } catch (err) {
+      console.error('Error processing registration:', err);
     }
   }
   res.json({ received: true });
@@ -127,8 +245,6 @@ app.post('/api/create-checkout-session', async (req, res) => {
     res.status(500).json({ error: 'Failed to create Stripe session' });
   }
 });
-
-
 
 const PORT = process.env.PORT || 4242;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
