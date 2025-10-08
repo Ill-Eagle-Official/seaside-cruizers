@@ -1,15 +1,16 @@
 // Basic Express + Stripe Checkout session creation
-const express = require('express');
-const cors = require('cors');
-const bodyParser = require('body-parser');
-require('dotenv').config();
-const Stripe = require('stripe');
-const nodemailer = require('nodemailer');
-const getRawBody = require('raw-body');
-const { google } = require('googleapis');
+import express from 'express';
+import cors from 'cors';
+import bodyParser from 'body-parser';
+import dotenv from 'dotenv';
+import Stripe from 'stripe';
+import nodemailer from 'nodemailer';
+import getRawBody from 'raw-body';
+import { google } from 'googleapis';
 
+dotenv.config();
 const app = express();
-const stripe = Stripe(process.env.STRIPE_SECRET_KEY);
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
 app.use(cors());
 
