@@ -1,8 +1,8 @@
-import Stripe from 'stripe';
-import nodemailer from 'nodemailer';
-import { google } from 'googleapis';
+const Stripe = require('stripe');
+const nodemailer = require('nodemailer');
+const { google } = require('googleapis');
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+const stripe = Stripe(process.env.STRIPE_SECRET_KEY);
 
 // Google Sheets setup
 let sheets = null;
