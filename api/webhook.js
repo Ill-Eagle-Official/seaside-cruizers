@@ -1,7 +1,6 @@
 import Stripe from 'stripe';
 import nodemailer from 'nodemailer';
 import { google } from 'googleapis';
-import { buffer } from 'micro';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
@@ -36,6 +35,15 @@ const transporter = nodemailer.createTransport({
     pass: process.env.GMAIL_PASS,
   },
 });
+
+// Log configuration status (without exposing secrets)
+console.log('Configuration check:');
+console.log('- GMAIL_USER:', process.env.GMAIL_USER ? '✅ Set' : '❌ Missing');
+console.log('- GMAIL_PASS:', process.env.GMAIL_PASS ? '✅ Set' : '❌ Missing');
+console.log('- STRIPE_WEBHOOK_SECRET:', process.env.STRIPE_WEBHOOK_SECRET ? '✅ Set' : '❌ Missing');
+console.log('- GOOGLE_SERVICE_ACCOUNT_EMAIL:', process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL ? '✅ Set' : '❌ Missing');
+console.log('- GOOGLE_PRIVATE_KEY:', process.env.GOOGLE_PRIVATE_KEY ? '✅ Set' : '❌ Missing');
+console.log('- GOOGLE_SHEETS_ID:', process.env.GOOGLE_SHEETS_ID ? '✅ Set' : '❌ Missing');
 
 // Helper: format registration email
 function formatEmail(data, session) {
@@ -140,21 +148,47 @@ export const config = {
 };
 
 export default async function handler(req, res) {
+  console.log('=== WEBHOOK CALLED ===');
+  console.log('Method:', req.method);
+  
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
   const sig = req.headers['stripe-signature'];
+  console.log('Stripe signature present:', !!sig);
+  console.log('Webhook secret configured:', !!process.env.STRIPE_WEBHOOK_SECRET);
+  
   let event;
+  let rawBody;
   
   // Get raw body for signature verification
-  const buf = await buffer(req);
-  const rawBody = buf.toString('utf8');
+  try {
+    if (req.body instanceof Buffer) {
+      rawBody = req.body.toString('utf8');
+    } else if (typeof req.body === 'string') {
+      rawBody = req.body;
+    } else {
+      // Read from stream
+      const chunks = [];
+      for await (const chunk of req) {
+        chunks.push(chunk);
+      }
+      rawBody = Buffer.concat(chunks).toString('utf8');
+    }
+    console.log('Raw body type:', typeof req.body);
+    console.log('Raw body length:', rawBody.length);
+  } catch (err) {
+    console.error('Error reading request body:', err.message);
+    return res.status(400).send('Error reading request body');
+  }
   
   try {
     event = stripe.webhooks.constructEvent(rawBody, sig, process.env.STRIPE_WEBHOOK_SECRET);
+    console.log('✅ Webhook signature verified successfully');
+    console.log('Event type:', event.type);
   } catch (err) {
-    console.error('Webhook signature verification failed:', err.message);
+    console.error('❌ Webhook signature verification failed:', err.message);
     return res.status(400).send(`Webhook Error: ${err.message}`);
   }
 
