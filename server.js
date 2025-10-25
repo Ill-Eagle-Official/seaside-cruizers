@@ -247,4 +247,5 @@ app.post('/api/create-checkout-session', async (req, res) => {
   }
 });
 
-export default app;
+const PORT = process.env.PORT || 4242;
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
