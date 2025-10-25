@@ -1,6 +1,7 @@
 import Stripe from 'stripe';
 import nodemailer from 'nodemailer';
 import { google } from 'googleapis';
+import getRawBody from 'raw-body';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
@@ -164,20 +165,10 @@ export default async function handler(req, res) {
   
   // Get raw body for signature verification
   try {
-    if (req.body instanceof Buffer) {
-      rawBody = req.body.toString('utf8');
-    } else if (typeof req.body === 'string') {
-      rawBody = req.body;
-    } else {
-      // Read from stream
-      const chunks = [];
-      for await (const chunk of req) {
-        chunks.push(chunk);
-      }
-      rawBody = Buffer.concat(chunks).toString('utf8');
-    }
-    console.log('Raw body type:', typeof req.body);
+    const buffer = await getRawBody(req);
+    rawBody = buffer.toString('utf8');
     console.log('Raw body length:', rawBody.length);
+    console.log('Raw body preview:', rawBody.substring(0, 100));
   } catch (err) {
     console.error('Error reading request body:', err.message);
     return res.status(400).send('Error reading request body');
