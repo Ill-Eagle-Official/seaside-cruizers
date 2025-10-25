@@ -1,6 +1,7 @@
 import Stripe from 'stripe';
 import nodemailer from 'nodemailer';
 import { google } from 'googleapis';
+import { buffer } from 'micro';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
@@ -9,18 +10,21 @@ let sheets = null;
 let auth = null;
 (function initializeGoogleSheets() {
   try {
-    if (process.env.GOOGLE_APPLICATION_CREDENTIALS) {
+    if (process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL && process.env.GOOGLE_PRIVATE_KEY) {
       auth = new google.auth.GoogleAuth({
-        keyFile: process.env.GOOGLE_APPLICATION_CREDENTIALS,
+        credentials: {
+          client_email: process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL,
+          private_key: process.env.GOOGLE_PRIVATE_KEY.replace(/\\n/g, '\n'),
+        },
         scopes: ['https://www.googleapis.com/auth/spreadsheets'],
       });
       sheets = google.sheets('v4');
-      console.log('Google Sheets integration enabled via key file');
+      console.log('Google Sheets integration enabled');
     } else {
       console.log('Google Sheets integration disabled - credentials not set');
     }
   } catch (err) {
-    console.log('Google Sheets integration disabled - invalid credentials');
+    console.error('Google Sheets integration disabled - error:', err.message);
   }
 })();
 
@@ -128,6 +132,13 @@ async function addToGoogleSheets(data, session) {
   }
 }
 
+// Disable body parsing for webhook signature verification
+export const config = {
+  api: {
+    bodyParser: false,
+  },
+};
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
@@ -136,8 +147,12 @@ export default async function handler(req, res) {
   const sig = req.headers['stripe-signature'];
   let event;
   
+  // Get raw body for signature verification
+  const buf = await buffer(req);
+  const rawBody = buf.toString('utf8');
+  
   try {
-    event = stripe.webhooks.constructEvent(req.body, sig, process.env.STRIPE_WEBHOOK_SECRET);
+    event = stripe.webhooks.constructEvent(rawBody, sig, process.env.STRIPE_WEBHOOK_SECRET);
   } catch (err) {
     console.error('Webhook signature verification failed:', err.message);
     return res.status(400).send(`Webhook Error: ${err.message}`);
@@ -147,30 +162,44 @@ export default async function handler(req, res) {
     const session = event.data.object;
     const data = session.metadata || {};
     
+    console.log('Processing checkout.session.completed for:', data.firstName, data.lastName);
+    console.log('Session ID:', session.id);
+    
     // Run both email and Google Sheets operations in parallel
     const promises = [];
     
     // Send email
     try {
       const email = formatEmail(data, session);
-      promises.push(
-        transporter.sendMail({
-          from: process.env.GMAIL_USER,
-          to: process.env.GMAIL_USER, // or a different admin/club email
-          subject: email.subject,
-          text: email.text,
-        })
-      );
+      console.log('Attempting to send email to:', process.env.GMAIL_USER);
+      const emailPromise = transporter.sendMail({
+        from: process.env.GMAIL_USER,
+        to: process.env.GMAIL_USER, // or a different admin/club email
+        subject: email.subject,
+        text: email.text,
+      }).then(() => {
+        console.log('Email sent successfully');
+      }).catch((err) => {
+        console.error('Email failed:', err.message);
+        throw err;
+      });
+      promises.push(emailPromise);
     } catch (err) {
       console.error('Failed to prepare email:', err);
     }
     
     // Add to Google Sheets
+    console.log('Attempting to add to Google Sheets');
     promises.push(addToGoogleSheets(data, session));
     
     // Execute both operations
     try {
-      await Promise.allSettled(promises);
+      const results = await Promise.allSettled(promises);
+      console.log('Operations completed:', results.map((r, i) => ({
+        index: i,
+        status: r.status,
+        reason: r.status === 'rejected' ? r.reason?.message : undefined
+      })));
       console.log('Registration processed for', data.firstName, data.lastName);
     } catch (err) {
       console.error('Error processing registration:', err);

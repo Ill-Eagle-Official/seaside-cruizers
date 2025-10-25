@@ -25,6 +25,7 @@
     "dotenv": "^16.5.0",
     "express": "^5.1.0",
     "googleapis": "^160.0.0",
+    "micro": "^10.0.1",
     "nodemailer": "^7.0.3",
     "raw-body": "^3.0.0",
     "stripe": "^18.2.1"
