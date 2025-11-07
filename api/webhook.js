@@ -2,6 +2,7 @@ import Stripe from 'stripe';
 import nodemailer from 'nodemailer';
 import { google } from 'googleapis';
 import getRawBody from 'raw-body';
+import { generateDashSheetPDF, sendDashSheetEmail } from './utils/pdfGenerator.js';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
@@ -79,11 +80,45 @@ Date/Time of Registration: ${new Date().toLocaleString('en-US', { timeZone: 'Ame
   };
 }
 
+// Helper: Get current entry count from Google Sheets (for entry numbers)
+async function getEntryCount() {
+  if (!sheets || !auth) {
+    console.log('Google Sheets not configured, using timestamp-based entry number');
+    // Fallback: use timestamp-based numbering
+    return Date.now() % 1000;
+  }
+  
+  try {
+    const authClient = await auth.getClient();
+    const accessToken = await authClient.getAccessToken();
+    
+    const response = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${process.env.GOOGLE_SHEETS_ID}/values/Sheet1!A:A`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${accessToken.token}`,
+      }
+    });
+    
+    if (!response.ok) {
+      throw new Error(`Google Sheets API error: ${response.status} ${response.statusText}`);
+    }
+    
+    const data = await response.json();
+    // Count rows (minus header row)
+    const rowCount = data.values ? data.values.length : 0;
+    return Math.max(1, rowCount); // Entry numbers start at 1
+  } catch (err) {
+    console.error('Failed to get entry count from Google Sheets:', err);
+    // Fallback
+    return Date.now() % 1000;
+  }
+}
+
 // Helper: Add registration to Google Sheets
 async function addToGoogleSheets(data, session) {
   if (!sheets || !auth) {
     console.log('Skipping Google Sheets - not configured');
-    return;
+    return null;
   }
   try {
     const hat = data.buyHat === 'true' || data.buyHat === true;
@@ -135,9 +170,20 @@ async function addToGoogleSheets(data, session) {
       throw new Error(`Google Sheets API error: ${response.status} ${response.statusText}`);
     }
     
+    const result = await response.json();
     console.log('Registration added to Google Sheets for', data.firstName, data.lastName);
+    
+    // Return the row number (entry number)
+    if (result.updates && result.updates.updatedRange) {
+      const match = result.updates.updatedRange.match(/!A(\d+):/);
+      if (match) {
+        return parseInt(match[1], 10) - 1; // Subtract 1 for header row
+      }
+    }
+    return null;
   } catch (err) {
     console.error('Failed to add registration to Google Sheets:', err);
+    return null;
   }
 }
 
@@ -190,45 +236,67 @@ export default async function handler(req, res) {
     console.log('Processing checkout.session.completed for:', data.firstName, data.lastName);
     console.log('Session ID:', session.id);
     
-    // Run both email and Google Sheets operations in parallel
+    // Get the entry number first (before adding to sheets to avoid race conditions)
+    let entryNumber = await getEntryCount();
+    console.log('Assigned entry number:', entryNumber);
+    
+    // Run email, Google Sheets, and PDF operations
     const promises = [];
     
-    // Send email
+    // Send admin notification email
     try {
       const email = formatEmail(data, session);
-      console.log('Attempting to send email to:', process.env.GMAIL_USER);
+      console.log('Attempting to send admin email to:', process.env.GMAIL_USER);
       const emailPromise = transporter.sendMail({
         from: process.env.GMAIL_USER,
-        to: process.env.GMAIL_USER, // or a different admin/club email
+        to: process.env.GMAIL_USER, // admin/club email
         subject: email.subject,
         text: email.text,
       }).then(() => {
-        console.log('Email sent successfully');
+        console.log('Admin email sent successfully');
       }).catch((err) => {
-        console.error('Email failed:', err.message);
+        console.error('Admin email failed:', err.message);
         throw err;
       });
       promises.push(emailPromise);
     } catch (err) {
-      console.error('Failed to prepare email:', err);
+      console.error('Failed to prepare admin email:', err);
     }
     
-    // Add to Google Sheets
+    // Add to Google Sheets (this might update the entry number)
     console.log('Attempting to add to Google Sheets');
-    promises.push(addToGoogleSheets(data, session));
+    const sheetsPromise = addToGoogleSheets(data, session).then((rowNumber) => {
+      if (rowNumber) {
+        entryNumber = rowNumber;
+        console.log('Entry number updated from Google Sheets:', entryNumber);
+      }
+    });
+    promises.push(sheetsPromise);
     
-    // Execute both operations
+    // Wait for sheets to complete before generating PDF (to get correct entry number)
+    await Promise.allSettled(promises);
+    
+    // Generate and send dash sheet PDF to participant
     try {
-      const results = await Promise.allSettled(promises);
-      console.log('Operations completed:', results.map((r, i) => ({
-        index: i,
-        status: r.status,
-        reason: r.status === 'rejected' ? r.reason?.message : undefined
-      })));
-      console.log('Registration processed for', data.firstName, data.lastName);
+      console.log('Generating dash sheet PDF...');
+      const pdfBuffer = await generateDashSheetPDF(data, entryNumber);
+      
+      console.log('Sending dash sheet PDF to participant:', data.email);
+      await sendDashSheetEmail(
+        transporter,
+        pdfBuffer,
+        data.email,
+        `${data.firstName} ${data.lastName}`,
+        entryNumber
+      );
+      console.log('Dash sheet PDF sent successfully to:', data.email);
     } catch (err) {
-      console.error('Error processing registration:', err);
+      console.error('Failed to generate or send dash sheet PDF:', err);
+      // Don't fail the webhook if PDF generation fails
     }
+    
+    // Log summary
+    console.log('Registration fully processed for', data.firstName, data.lastName);
   }
   
   res.json({ received: true });
