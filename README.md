@@ -85,6 +85,16 @@ curl -X POST https://your-domain.vercel.app/api/test-dashsheet \
 - Automatically increments with each registration
 - Formatted as 3-digit numbers (001, 042, 999)
 
+### Text Normalization
+All text input is automatically normalized for professional appearance:
+- **Names & Locations**: Title Case (`JOHN DOE` → `John Doe`)
+- **Car Details**: Title Case (`CHEVROLET` → `Chevrolet`)
+- **Email**: Lowercase (`JOHN@EXAMPLE.COM` → `john@example.com`)
+- **Postal Code**: Uppercase (`v9p 2h3` → `V9P 2H3`)
+- **Special Cases**: Handles O'Brien, Mary-Jane, etc.
+
+This ensures consistent, professional formatting in Google Sheets, emails, and PDF dash sheets regardless of how users type their information.
+
 ## API Endpoints
 
 ### `/api/create-checkout-session` (POST)
@@ -118,7 +128,8 @@ Runs Express server on `http://localhost:3000`
 seaside-cruizers/
 ├── api/
 │   ├── utils/
-│   │   └── pdfGenerator.js      # PDF generation with PDFShift
+│   │   ├── pdfGenerator.js      # PDF generation with PDFShift
+│   │   └── textNormalizer.js    # Text capitalization utilities
 │   ├── create-checkout-session.js
 │   ├── webhook.js               # Main registration handler
 │   └── test-dashsheet.js        # Test endpoint
