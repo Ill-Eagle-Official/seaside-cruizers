@@ -1,4 +1,5 @@
 import { generateDashSheetPDF, sendDashSheetEmail } from './utils/pdfGenerator.js';
+import { normalizeRegistrationData } from './utils/textNormalizer.js';
 import nodemailer from 'nodemailer';
 import dotenv from 'dotenv';
 
@@ -23,21 +24,25 @@ export default async function handler(req, res) {
   try {
     console.log('Testing dash sheet PDF generation...');
     
-    // Test data
-    const testData = {
-      firstName: 'John',
-      lastName: 'Doe',
-      email: req.body.email || process.env.GMAIL_USER, // Send to your own email for testing
+    // Test data with various capitalization issues (to demonstrate normalization)
+    const rawTestData = {
+      firstName: 'JOHN',  // All caps - will be normalized to "John"
+      lastName: 'doe',    // All lowercase - will be normalized to "Doe"
+      email: req.body.email || process.env.GMAIL_USER,
       year: '1969',
-      make: 'Chevrolet',
-      model: 'Camaro SS',
-      city: 'Parksville',
-      province: 'BC'
+      make: 'CHEVROLET', // All caps - will be normalized to "Chevrolet"
+      model: 'camaro ss', // All lowercase - will be normalized to "Camaro Ss"
+      city: 'parksville', // All lowercase - will be normalized to "Parksville"
+      province: 'bc'      // Lowercase - will be normalized to "Bc"
     };
+    
+    // Normalize the test data (same as webhook does)
+    const testData = normalizeRegistrationData(rawTestData);
     
     const testEntryNumber = 42;
     
-    console.log('Generating PDF for test data:', testData);
+    console.log('Original data:', rawTestData);
+    console.log('Normalized data:', testData);
     
     // Generate PDF
     const pdfBuffer = await generateDashSheetPDF(testData, testEntryNumber);

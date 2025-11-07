@@ -3,6 +3,7 @@ import nodemailer from 'nodemailer';
 import { google } from 'googleapis';
 import getRawBody from 'raw-body';
 import { generateDashSheetPDF, sendDashSheetEmail } from './utils/pdfGenerator.js';
+import { normalizeRegistrationData } from './utils/textNormalizer.js';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
@@ -231,7 +232,10 @@ export default async function handler(req, res) {
 
   if (event.type === 'checkout.session.completed') {
     const session = event.data.object;
-    const data = session.metadata || {};
+    const rawData = session.metadata || {};
+    
+    // Normalize text data (proper capitalization, trimming, etc.)
+    const data = normalizeRegistrationData(rawData);
     
     console.log('Processing checkout.session.completed for:', data.firstName, data.lastName);
     console.log('Session ID:', session.id);
