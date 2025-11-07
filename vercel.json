@@ -12,12 +12,9 @@
   ],
   "functions": {
     "api/webhook.js": {
-      "memory": 3008,
-      "maxDuration": 60,
+      "memory": 1024,
+      "maxDuration": 30,
       "includeFiles": "dashsheet.html"
-    },
-    "api/**/*.js": {
-      "maxDuration": 30
     }
   }
 }

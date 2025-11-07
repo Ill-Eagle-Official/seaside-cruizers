@@ -20,14 +20,12 @@
   },
   "homepage": "https://github.com/Ill-Eagle-Official/seaside-cruizers#readme",
   "dependencies": {
-    "@sparticuz/chromium": "^141.0.0",
     "body-parser": "^2.2.0",
     "cors": "^2.8.5",
     "dotenv": "^16.5.0",
     "express": "^5.1.0",
     "googleapis": "^160.0.0",
     "nodemailer": "^7.0.3",
-    "puppeteer-core": "^24.29.1",
     "raw-body": "^3.0.0",
     "stripe": "^18.2.1"
   }

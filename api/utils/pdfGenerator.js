@@ -1,5 +1,3 @@
-import chromium from '@sparticuz/chromium';
-import puppeteer from 'puppeteer-core';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -59,8 +57,6 @@ function populateDashSheetTemplate(data) {
  * @returns {Promise<Buffer>} PDF buffer
  */
 export async function generateDashSheetPDF(registrationData, entryNumber) {
-  let browser = null;
-  
   try {
     console.log('Generating dash sheet PDF for', registrationData.firstName, registrationData.lastName);
     
@@ -78,34 +74,41 @@ export async function generateDashSheetPDF(registrationData, entryNumber) {
     // Populate HTML template
     const html = populateDashSheetTemplate(templateData);
     
-    // Launch browser
-    console.log('Launching browser...');
-    browser = await puppeteer.launch({
-      args: chromium.args,
-      defaultViewport: chromium.defaultViewport,
-      executablePath: await chromium.executablePath(),
-      headless: chromium.headless,
+    // Generate PDF using PDFShift API
+    console.log('Converting HTML to PDF with PDFShift...');
+    
+    if (!process.env.PDFSHIFT_API_KEY) {
+      throw new Error('PDFSHIFT_API_KEY environment variable is not set');
+    }
+    
+    const response = await fetch('https://api.pdfshift.io/v3/convert/pdf', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Basic ${Buffer.from(`api:${process.env.PDFSHIFT_API_KEY}`).toString('base64')}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        source: html,
+        format: 'A4',
+        margin: {
+          top: '0.75in',
+          right: '0.75in',
+          bottom: '0.75in',
+          left: '0.75in'
+        },
+        landscape: false,
+        use_print: true
+      })
     });
     
-    const page = await browser.newPage();
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('PDFShift API error:', response.status, errorText);
+      throw new Error(`PDFShift API error: ${response.status} - ${errorText}`);
+    }
     
-    // Set content
-    await page.setContent(html, {
-      waitUntil: 'networkidle0'
-    });
-    
-    // Generate PDF
-    console.log('Generating PDF...');
-    const pdfBuffer = await page.pdf({
-      format: 'A4',
-      printBackground: true,
-      margin: {
-        top: '0.75in',
-        right: '0.75in',
-        bottom: '0.75in',
-        left: '0.75in'
-      }
-    });
+    const arrayBuffer = await response.arrayBuffer();
+    const pdfBuffer = Buffer.from(arrayBuffer);
     
     console.log('PDF generated successfully, size:', pdfBuffer.length, 'bytes');
     
@@ -113,10 +116,6 @@ export async function generateDashSheetPDF(registrationData, entryNumber) {
   } catch (err) {
     console.error('Error generating PDF:', err);
     throw err;
-  } finally {
-    if (browser) {
-      await browser.close();
-    }
   }
 }
 
