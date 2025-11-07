@@ -4,8 +4,7 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 // Helper: calculate total amount
 function calculateAmount(data) {
   let total = 30; // base fee
-  if (data.buyHat) total += 15;
-  if (data.buyShirt) total += 20;
+  if (data.pokerRun) total += 5; // poker run additional fee
   return total * 100; // Stripe expects cents
 }
 
@@ -26,7 +25,7 @@ export default async function handler(req, res) {
             currency: 'cad',
             product_data: {
               name: 'Seaside Cruizers Car Show Registration',
-              description: 'Car show registration and swag',
+              description: 'Car show registration' + (data.pokerRun ? ' + Poker Run' : ''),
             },
             unit_amount: amount,
           },

@@ -110,14 +110,8 @@ export function normalizeRegistrationData(data) {
     // Keep email lowercase (standard)
     email: data.email?.toLowerCase().trim(),
     
-    // Swag options - keep as-is (they're likely dropdowns anyway)
-    buyHat: data.buyHat,
-    buyShirt: data.buyShirt,
-    hatColour: data.hatColour,
-    hatSize: data.hatSize,
-    shirtColour: data.shirtColour,
-    shirtGender: data.shirtGender,
-    shirtSize: data.shirtSize
+    // Additional events - keep as boolean
+    pokerRun: data.pokerRun
   };
 }
 

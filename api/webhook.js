@@ -50,8 +50,7 @@ console.log('- GOOGLE_SHEETS_ID:', process.env.GOOGLE_SHEETS_ID ? '✅ Set' : '�
 
 // Helper: format registration email
 function formatEmail(data, session) {
-  const hat = data.buyHat === 'true' || data.buyHat === true;
-  const shirt = data.buyShirt === 'true' || data.buyShirt === true;
+  const pokerRun = data.pokerRun === 'true' || data.pokerRun === true;
   return {
     subject: 'New Seaside Cruizers Car Show Registration',
     text: `Personal Information:
@@ -65,14 +64,12 @@ Car Information:
   • Year: ${data.year}
   • Car Club Affiliation: ${data.clubName || 'None'}
 
-Swag Purchases:
-  • Hat: ${hat ? 'Yes' : 'No'}${hat ? `\n    – Colour: ${data.hatColour}\n    – Size: ${data.hatSize}` : ''}
-  • Shirt: ${shirt ? 'Yes' : 'No'}${shirt ? `\n    – Colour: ${data.shirtColour}\n    – Gender Cut: ${data.shirtGender}\n    – Size: ${data.shirtSize}` : ''}
+Additional Events:
+  • Poker Run: ${pokerRun ? 'Yes' : 'No'}
 
 Payment Details:
   • Base Registration: $30.00
-  • Hat: $${hat ? '15.00' : '0.00'}
-  • Shirt: $${shirt ? '20.00' : '0.00'}
+  • Poker Run: $${pokerRun ? '5.00' : '0.00'}
   • Total Charged: $${(session.amount_total / 100).toFixed(2)}
   • Payment Transaction ID: ${session.payment_intent}
 
@@ -122,8 +119,7 @@ async function addToGoogleSheets(data, session) {
     return null;
   }
   try {
-    const hat = data.buyHat === 'true' || data.buyHat === true;
-    const shirt = data.buyShirt === 'true' || data.buyShirt === true;
+    const pokerRun = data.pokerRun === 'true' || data.pokerRun === true;
     const timestamp = new Date().toLocaleString('en-US', { timeZone: 'America/Los_Angeles' });
     
     const row = [
@@ -136,16 +132,9 @@ async function addToGoogleSheets(data, session) {
       data.postalCode || '',
       `${data.year} ${data.make} ${data.model}`,
       data.clubName || 'None',
-      hat ? 'Yes' : 'No',
-      hat ? data.hatColour : '',
-      hat ? data.hatSize : '',
-      shirt ? 'Yes' : 'No',
-      shirt ? data.shirtColour : '',
-      shirt ? data.shirtGender : '',
-      shirt ? data.shirtSize : '',
+      pokerRun ? 'Yes' : 'No',
       30, // Base fee
-      hat ? 15 : 0, // Hat price
-      shirt ? 20 : 0, // Shirt price
+      pokerRun ? 5 : 0, // Poker run price
       (session.amount_total / 100).toFixed(2), // Total paid
       session.payment_intent // Payment ID
     ];
@@ -156,7 +145,7 @@ async function addToGoogleSheets(data, session) {
     // Use the raw fetch API approach to avoid Headers issues
     const accessToken = await authClient.getAccessToken();
     
-    const response = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${process.env.GOOGLE_SHEETS_ID}/values/Sheet1!A:U:append?valueInputOption=USER_ENTERED`, {
+    const response = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${process.env.GOOGLE_SHEETS_ID}/values/Sheet1!A:N:append?valueInputOption=USER_ENTERED`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${accessToken.token}`,

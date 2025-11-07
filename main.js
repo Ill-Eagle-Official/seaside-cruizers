@@ -1,41 +1,26 @@
-// Swag and pricing constants
+// Pricing constants
 const BASE_FEE = 30;
-const HAT_PRICE = 15;
-const SHIRT_PRICE = 20;
+const POKER_RUN_PRICE = 5;
 
 // DOM elements
-const buyHat = document.getElementById('buyHat');
-const buyShirt = document.getElementById('buyShirt');
-const hatOptions = document.getElementById('hatOptions');
-const shirtOptions = document.getElementById('shirtOptions');
-const hatFee = document.getElementById('hatFee');
-const shirtFee = document.getElementById('shirtFee');
+const pokerRun = document.getElementById('pokerRun');
+const pokerRunFee = document.getElementById('pokerRunFee');
 const totalFee = document.getElementById('totalFee');
 
-// Show/hide swag options
-buyHat.addEventListener('change', () => {
-  hatOptions.style.display = buyHat.checked ? 'block' : 'none';
-  updatePricing();
-});
-buyShirt.addEventListener('change', () => {
-  shirtOptions.style.display = buyShirt.checked ? 'block' : 'none';
+// Update pricing when poker run checkbox changes
+pokerRun.addEventListener('change', () => {
   updatePricing();
 });
 
 // Update pricing summary
 function updatePricing() {
-  let hat = buyHat.checked ? HAT_PRICE : 0;
-  let shirt = buyShirt.checked ? SHIRT_PRICE : 0;
-  hatFee.textContent = `$${hat}`;
-  shirtFee.textContent = `$${shirt}`;
-  totalFee.textContent = `$${BASE_FEE + hat + shirt}`;
+  let pokerRunCost = pokerRun.checked ? POKER_RUN_PRICE : 0;
+  pokerRunFee.textContent = `$${pokerRunCost}`;
+  totalFee.textContent = `$${BASE_FEE + pokerRunCost}`;
 }
 
 // Initial pricing update
 updatePricing();
-
-// Optionally, update price if swag options are changed (e.g., size/color)
-// (Not needed for price, but could be used for validation later)
 
 // Handle form submission and Stripe Checkout
 const form = document.getElementById('registrationForm');
@@ -62,13 +47,7 @@ form.addEventListener('submit', async function (e) {
     model: form.model.value.trim(),
     year: form.year.value.trim(),
     clubName: form.clubName.value.trim(),
-    buyHat: buyHat.checked,
-    hatColour: buyHat.checked ? form.hatColour.value : '',
-    hatSize: buyHat.checked ? form.hatSize.value : '',
-    buyShirt: buyShirt.checked,
-    shirtColour: buyShirt.checked ? form.shirtColour.value : '',
-    shirtGender: buyShirt.checked ? form.shirtGender.value : '',
-    shirtSize: buyShirt.checked ? form.shirtSize.value : '',
+    pokerRun: pokerRun.checked,
     origin: window.location.origin
   };
 
