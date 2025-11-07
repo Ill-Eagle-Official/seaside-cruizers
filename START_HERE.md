@@ -71,9 +71,9 @@ After deployment completes:
 
 ```bash
 # Test the PDF generation (replace with your email)
-curl -X POST https://your-domain.vercel.app/api/test-dashsheet \
+curl -X POST https://seaside-cruizers.vercel.app/api/test-dashsheet \
   -H "Content-Type: application/json" \
-  -d '{"email": "your-email@example.com"}'
+  -d '{"email": "alexx.j.jackson@gmail.com"}'
 ```
 
 **Check your email** - you should receive a PDF dash sheet! 🎉

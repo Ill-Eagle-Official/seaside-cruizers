@@ -11,7 +11,7 @@ readme.txt
 
 # Test files
 api/test.js
-api/test-dashsheet.js
+# api/test-dashsheet.js - COMMENTED OUT: We want this deployed for testing!
 
 # Git files
 .git
