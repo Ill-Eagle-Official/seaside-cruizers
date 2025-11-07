@@ -1,0 +1,29 @@
+# Exclude unnecessary files to reduce deployment size
+# Development and documentation files
+server.js
+verify-setup.js
+DASHSHEET_SETUP.md
+IMPLEMENTATION_SUMMARY.md
+PDF_SOLUTIONS_COMPARISON.md
+QUICK_START.md
+VERCEL_DEPLOYMENT_TROUBLESHOOTING.md
+readme.txt
+
+# Test files
+api/test.js
+api/test-dashsheet.js
+
+# Git files
+.git
+.github
+
+# IDE files
+.vscode
+.idea
+*.swp
+*.swo
+
+# Misc
+.DS_Store
+*.log
+
