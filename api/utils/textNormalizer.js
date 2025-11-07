@@ -3,9 +3,26 @@
  * Handles proper capitalization of names, locations, and other text fields
  */
 
+// Common abbreviations that should be ALL CAPS
+const ABBREVIATIONS = new Set([
+  // Canadian Provinces
+  'bc', 'ab', 'sk', 'mb', 'on', 'qc', 'nb', 'ns', 'pe', 'nl', 'yt', 'nt', 'nu',
+  // US States (common abbreviations)
+  'al', 'ak', 'az', 'ar', 'ca', 'co', 'ct', 'de', 'fl', 'ga', 'hi', 'id', 'il', 'in', 'ia', 'ks', 
+  'ky', 'la', 'me', 'md', 'ma', 'mi', 'mn', 'ms', 'mo', 'mt', 'ne', 'nv', 'nh', 'nj', 'nm', 'ny', 
+  'nc', 'nd', 'oh', 'ok', 'or', 'pa', 'ri', 'sc', 'sd', 'tn', 'tx', 'ut', 'vt', 'va', 'wa', 'wv', 
+  'wi', 'wy', 'dc',
+  // Car model abbreviations
+  'ss', 'gt', 'gto', 'rs', 'z28', 'ls', 'lt', 'lx', 'se', 'sl', 'amg', 'quattro', 'awd', '4wd',
+  'v6', 'v8', 'v10', 'v12', 'hp', 'xr', 'xt', 'svt', 'srt', 'rt', 'se', 'sx', 'dx', 'lx', 'ex',
+  'gli', 'gti', 'tdi', 'tsi', 'glx', 'glc', 'gle', 'cls', 'slk', 'clk', 'ml', 'gl',
+  // Common words/abbreviations
+  'usa', 'uk', 'usa', 'usd', 'cad', 'ii', 'iii', 'iv'
+]);
+
 /**
  * Converts text to title case (first letter of each word capitalized)
- * Handles special cases like McDonald's, O'Brien, etc.
+ * Handles special cases like McDonald's, O'Brien, BC, SS, etc.
  * @param {string} text - Text to convert
  * @returns {string} Title cased text
  */
@@ -21,11 +38,23 @@ export function toTitleCase(text) {
     .map(word => {
       if (!word) return word;
       
-      // Handle hyphenated words (Mary-Jane)
+      const lowerWord = word.toLowerCase();
+      
+      // Check if entire word is a known abbreviation
+      if (ABBREVIATIONS.has(lowerWord)) {
+        return word.toUpperCase();
+      }
+      
+      // Handle hyphenated words (Mary-Jane, Z-28)
       if (word.includes('-')) {
         return word
           .split('-')
-          .map(part => part.charAt(0).toUpperCase() + part.slice(1))
+          .map(part => {
+            if (ABBREVIATIONS.has(part.toLowerCase())) {
+              return part.toUpperCase();
+            }
+            return part.charAt(0).toUpperCase() + part.slice(1);
+          })
           .join('-');
       }
       

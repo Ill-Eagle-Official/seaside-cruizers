@@ -28,11 +28,18 @@
         </div>
         <div class="form-group">
           <label for="country">Country *</label>
-          <input type="text" id="country" name="country" required>
+          <select id="country" name="country" required>
+            <option value="">Select Country</option>
+            <option value="Canada">Canada</option>
+            <option value="United States">United States</option>
+            <option value="Other">Other</option>
+          </select>
         </div>
         <div class="form-group">
           <label for="province">Province/State *</label>
-          <input type="text" id="province" name="province" required>
+          <select id="province" name="province" required>
+            <option value="">Select Country First</option>
+          </select>
         </div>
         <div class="form-group">
           <label for="city">City *</label>
@@ -47,7 +54,62 @@
         <legend>Car Information</legend>
         <div class="form-group">
           <label for="make">Make *</label>
-          <input type="text" id="make" name="make" required>
+          <select id="make" name="make" required>
+            <option value="">Select Make</option>
+            <option value="Acura">Acura</option>
+            <option value="Alfa Romeo">Alfa Romeo</option>
+            <option value="Aston Martin">Aston Martin</option>
+            <option value="Audi">Audi</option>
+            <option value="Bentley">Bentley</option>
+            <option value="BMW">BMW</option>
+            <option value="Buick">Buick</option>
+            <option value="Cadillac">Cadillac</option>
+            <option value="Chevrolet">Chevrolet</option>
+            <option value="Chrysler">Chrysler</option>
+            <option value="Dodge">Dodge</option>
+            <option value="Ferrari">Ferrari</option>
+            <option value="Fiat">Fiat</option>
+            <option value="Ford">Ford</option>
+            <option value="Genesis">Genesis</option>
+            <option value="GMC">GMC</option>
+            <option value="Honda">Honda</option>
+            <option value="Hyundai">Hyundai</option>
+            <option value="Infiniti">Infiniti</option>
+            <option value="Jaguar">Jaguar</option>
+            <option value="Jeep">Jeep</option>
+            <option value="Kia">Kia</option>
+            <option value="Lamborghini">Lamborghini</option>
+            <option value="Land Rover">Land Rover</option>
+            <option value="Lexus">Lexus</option>
+            <option value="Lincoln">Lincoln</option>
+            <option value="Maserati">Maserati</option>
+            <option value="Mazda">Mazda</option>
+            <option value="McLaren">McLaren</option>
+            <option value="Mercedes-Benz">Mercedes-Benz</option>
+            <option value="Mercury">Mercury</option>
+            <option value="Mini">Mini</option>
+            <option value="Mitsubishi">Mitsubishi</option>
+            <option value="Nissan">Nissan</option>
+            <option value="Oldsmobile">Oldsmobile</option>
+            <option value="Peugeot">Peugeot</option>
+            <option value="Plymouth">Plymouth</option>
+            <option value="Pontiac">Pontiac</option>
+            <option value="Porsche">Porsche</option>
+            <option value="Ram">Ram</option>
+            <option value="Renault">Renault</option>
+            <option value="Rolls-Royce">Rolls-Royce</option>
+            <option value="Saab">Saab</option>
+            <option value="Saturn">Saturn</option>
+            <option value="Scion">Scion</option>
+            <option value="Subaru">Subaru</option>
+            <option value="Suzuki">Suzuki</option>
+            <option value="Tesla">Tesla</option>
+            <option value="Toyota">Toyota</option>
+            <option value="Triumph">Triumph</option>
+            <option value="Volkswagen">Volkswagen</option>
+            <option value="Volvo">Volvo</option>
+            <option value="Other">Other</option>
+          </select>
         </div>
         <div class="form-group">
           <label for="model">Model *</label>
@@ -151,6 +213,111 @@
       <p>There was a problem processing your payment. Please try again.</p>
     </div>
   </main>
+  <script>
+    // Province/State dropdown logic
+    const countrySelect = document.getElementById('country');
+    const provinceSelect = document.getElementById('province');
+
+    const canadianProvinces = [
+      { value: 'BC', label: 'British Columbia (BC)' },
+      { value: 'AB', label: 'Alberta (AB)' },
+      { value: 'SK', label: 'Saskatchewan (SK)' },
+      { value: 'MB', label: 'Manitoba (MB)' },
+      { value: 'ON', label: 'Ontario (ON)' },
+      { value: 'QC', label: 'Quebec (QC)' },
+      { value: 'NB', label: 'New Brunswick (NB)' },
+      { value: 'NS', label: 'Nova Scotia (NS)' },
+      { value: 'PE', label: 'Prince Edward Island (PE)' },
+      { value: 'NL', label: 'Newfoundland and Labrador (NL)' },
+      { value: 'YT', label: 'Yukon (YT)' },
+      { value: 'NT', label: 'Northwest Territories (NT)' },
+      { value: 'NU', label: 'Nunavut (NU)' }
+    ];
+
+    const usStates = [
+      { value: 'AL', label: 'Alabama (AL)' },
+      { value: 'AK', label: 'Alaska (AK)' },
+      { value: 'AZ', label: 'Arizona (AZ)' },
+      { value: 'AR', label: 'Arkansas (AR)' },
+      { value: 'CA', label: 'California (CA)' },
+      { value: 'CO', label: 'Colorado (CO)' },
+      { value: 'CT', label: 'Connecticut (CT)' },
+      { value: 'DE', label: 'Delaware (DE)' },
+      { value: 'FL', label: 'Florida (FL)' },
+      { value: 'GA', label: 'Georgia (GA)' },
+      { value: 'HI', label: 'Hawaii (HI)' },
+      { value: 'ID', label: 'Idaho (ID)' },
+      { value: 'IL', label: 'Illinois (IL)' },
+      { value: 'IN', label: 'Indiana (IN)' },
+      { value: 'IA', label: 'Iowa (IA)' },
+      { value: 'KS', label: 'Kansas (KS)' },
+      { value: 'KY', label: 'Kentucky (KY)' },
+      { value: 'LA', label: 'Louisiana (LA)' },
+      { value: 'ME', label: 'Maine (ME)' },
+      { value: 'MD', label: 'Maryland (MD)' },
+      { value: 'MA', label: 'Massachusetts (MA)' },
+      { value: 'MI', label: 'Michigan (MI)' },
+      { value: 'MN', label: 'Minnesota (MN)' },
+      { value: 'MS', label: 'Mississippi (MS)' },
+      { value: 'MO', label: 'Missouri (MO)' },
+      { value: 'MT', label: 'Montana (MT)' },
+      { value: 'NE', label: 'Nebraska (NE)' },
+      { value: 'NV', label: 'Nevada (NV)' },
+      { value: 'NH', label: 'New Hampshire (NH)' },
+      { value: 'NJ', label: 'New Jersey (NJ)' },
+      { value: 'NM', label: 'New Mexico (NM)' },
+      { value: 'NY', label: 'New York (NY)' },
+      { value: 'NC', label: 'North Carolina (NC)' },
+      { value: 'ND', label: 'North Dakota (ND)' },
+      { value: 'OH', label: 'Ohio (OH)' },
+      { value: 'OK', label: 'Oklahoma (OK)' },
+      { value: 'OR', label: 'Oregon (OR)' },
+      { value: 'PA', label: 'Pennsylvania (PA)' },
+      { value: 'RI', label: 'Rhode Island (RI)' },
+      { value: 'SC', label: 'South Carolina (SC)' },
+      { value: 'SD', label: 'South Dakota (SD)' },
+      { value: 'TN', label: 'Tennessee (TN)' },
+      { value: 'TX', label: 'Texas (TX)' },
+      { value: 'UT', label: 'Utah (UT)' },
+      { value: 'VT', label: 'Vermont (VT)' },
+      { value: 'VA', label: 'Virginia (VA)' },
+      { value: 'WA', label: 'Washington (WA)' },
+      { value: 'WV', label: 'West Virginia (WV)' },
+      { value: 'WI', label: 'Wisconsin (WI)' },
+      { value: 'WY', label: 'Wyoming (WY)' },
+      { value: 'DC', label: 'District of Columbia (DC)' }
+    ];
+
+    countrySelect.addEventListener('change', function() {
+      const selectedCountry = this.value;
+      provinceSelect.innerHTML = '<option value="">Select...</option>';
+
+      if (selectedCountry === 'Canada') {
+        canadianProvinces.forEach(province => {
+          const option = document.createElement('option');
+          option.value = province.value;
+          option.textContent = province.label;
+          provinceSelect.appendChild(option);
+        });
+        provinceSelect.disabled = false;
+      } else if (selectedCountry === 'United States') {
+        usStates.forEach(state => {
+          const option = document.createElement('option');
+          option.value = state.value;
+          option.textContent = state.label;
+          provinceSelect.appendChild(option);
+        });
+        provinceSelect.disabled = false;
+      } else if (selectedCountry === 'Other') {
+        provinceSelect.innerHTML = '<option value="">Enter manually below</option>';
+        provinceSelect.disabled = true;
+        // Allow manual entry for "Other" countries - could add a text input if needed
+      } else {
+        provinceSelect.innerHTML = '<option value="">Select Country First</option>';
+        provinceSelect.disabled = true;
+      }
+    });
+  </script>
   <script src="main.js"></script>
 </body>
 
