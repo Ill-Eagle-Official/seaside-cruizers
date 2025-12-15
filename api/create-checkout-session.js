@@ -32,7 +32,7 @@ export default async function handler(req, res) {
           quantity: 1,
         },
       ],
-      success_url: `${data.origin}/registration.html?success=true&firstName=${encodeURIComponent(data.firstName)}`,
+      success_url: `${data.origin}/success.html?firstName=${encodeURIComponent(data.firstName)}`,
       cancel_url: `${data.origin}/registration.html?canceled=true`,
       metadata: data, // Store all registration data for later use
     });

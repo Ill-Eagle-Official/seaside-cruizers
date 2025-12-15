@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Registration Successful - Seaside Cruizers Car Show</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+      background-color: #f5f5f5;
+    }
+
+    .container {
+      background: white;
+      padding: 40px;
+      border-radius: 10px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      text-align: center;
+    }
+
+    .logo {
+      max-width: 200px;
+      width: 100%;
+      height: auto;
+      margin: 0 auto 20px;
+      display: block;
+    }
+
+    h1 {
+      color: #2c3e50;
+      margin-bottom: 20px;
+    }
+
+    .success-icon {
+      font-size: 4rem;
+      color: #27ae60;
+      margin: 20px 0;
+    }
+
+    .info {
+      background-color: #ecf0f1;
+      padding: 20px;
+      border-radius: 5px;
+      margin: 20px 0;
+      text-align: left;
+    }
+
+    .info h2 {
+      margin-top: 0;
+      color: #2c3e50;
+    }
+
+    .info ul {
+      margin: 10px 0;
+      padding-left: 20px;
+    }
+
+    .info li {
+      margin: 8px 0;
+    }
+
+    .email-notice {
+      background-color: #e8f4f8;
+      border-left: 4px solid #3498db;
+      padding: 15px 20px;
+      margin: 20px 0;
+      text-align: left;
+    }
+
+    .email-notice strong {
+      color: #2c3e50;
+    }
+
+    .btn {
+      display: inline-block;
+      background-color: #3498db;
+      color: white;
+      padding: 15px 30px;
+      text-decoration: none;
+      border-radius: 5px;
+      font-size: 18px;
+      margin: 20px 0;
+      transition: background-color 0.3s;
+    }
+
+    .btn:hover {
+      background-color: #2980b9;
+    }
+
+    @media (max-width: 600px) {
+      .logo {
+        max-width: 150px;
+      }
+      .container {
+        padding: 20px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <img src="seaside-cruizers.jpg" alt="Seaside Cruizers Logo" class="logo">
+    <div class="success-icon">✓</div>
+    <h1>Payment Processed Successfully!</h1>
+    <p style="font-size: 1.1em; color: #555;">Thank you, <strong id="userFirstName"></strong>! Your registration has been confirmed.</p>
+
+    <div class="email-notice">
+      <p style="margin: 0;"><strong>📧 Check Your Email</strong></p>
+      <p style="margin: 10px 0 0 0;">A confirmation email with your personalized dash sheet has been sent to your email address. Please check your inbox (and spam folder) for:</p>
+      <ul style="margin: 10px 0;">
+        <li>Registration confirmation</li>
+        <li>Your entry number</li>
+        <li>Your personalized dash sheet PDF (print and display on your dashboard)</li>
+      </ul>
+    </div>
+
+    <div class="info">
+      <h2>What's Next?</h2>
+      <ul>
+        <li>Print your dash sheet from the email attachment</li>
+        <li>Display it on your vehicle's dashboard during the event</li>
+        <li>Join us on <strong>June 13-15, 2025</strong> in <strong>Parksville – Qualicum Beach, BC</strong></li>
+        <li>Have a great time at the show!</li>
+      </ul>
+    </div>
+
+    <a href="/" class="btn">Return to Home Page</a>
+  </div>
+
+  <script>
+    // Get the firstName from URL parameters
+    window.addEventListener('DOMContentLoaded', () => {
+      const params = new URLSearchParams(window.location.search);
+      const firstName = params.get('firstName') || 'there';
+      document.getElementById('userFirstName').textContent = firstName;
+    });
+  </script>
+</body>
+
+</html>
+
