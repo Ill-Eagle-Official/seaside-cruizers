@@ -89,14 +89,14 @@ export async function generateDashSheetPDF(registrationData, entryNumber) {
       },
       body: JSON.stringify({
         source: html,
-        format: 'A4',
+        format: 'Letter',
         margin: {
           top: '0.75in',
           right: '0.75in',
           bottom: '0.75in',
           left: '0.75in'
         },
-        landscape: false,
+        landscape: true,
         use_print: true
       })
     });
