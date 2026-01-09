@@ -161,8 +161,12 @@
     const submitBtn = document.getElementById('submitBtn');
     const resultDiv = document.getElementById('result');
 
-    // Get domain from current location or use default
-    const domain = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+    // Get domain - always use production domain for API calls
+    // If opening as file://, use production domain
+    const domain = (window.location.protocol === 'file:' ||
+      window.location.hostname === 'localhost' ||
+      window.location.hostname === '127.0.0.1' ||
+      !window.location.hostname)
       ? 'seaside-cruizers.vercel.app'
       : window.location.hostname;
 
