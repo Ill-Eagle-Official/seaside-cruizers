@@ -109,6 +109,24 @@ Test endpoint for PDF generation and email delivery.
 { "email": "test@example.com" }
 ```
 
+### `/api/regenerate-dashsheet` (POST)
+Manually regenerate and send a dash sheet PDF. Useful for correcting errors or resending dash sheets.
+```json
+{
+  "firstName": "John",
+  "lastName": "Doe",
+  "email": "john.doe@example.com",
+  "year": "1965",
+  "make": "Chevrolet",
+  "model": "Impala",
+  "city": "Parksville",
+  "province": "BC",
+  "entryNumber": 42,
+  "adminKey": "optional-admin-key"
+}
+```
+**Note:** Set `ADMIN_KEY` environment variable for security (optional but recommended).
+
 ## Development
 
 ### Local Development
