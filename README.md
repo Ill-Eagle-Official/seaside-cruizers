@@ -208,6 +208,6 @@ ISC
 ---
 
 **Event**: Seaside Cruizers Father's Day Show and Shine  
-**Date**: June 13-15, 2025  
+**Date**: June 19-21, 2026  
 **Location**: Parksville – Qualicum Beach, BC
 

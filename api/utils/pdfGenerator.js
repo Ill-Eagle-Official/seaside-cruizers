@@ -91,10 +91,10 @@ export async function generateDashSheetPDF(registrationData, entryNumber) {
         source: html,
         format: 'Letter',
         margin: {
-          top: '0.75in',
-          right: '0.75in',
-          bottom: '0.75in',
-          left: '0.75in'
+          top: '0',
+          right: '0',
+          bottom: '0',
+          left: '0'
         },
         landscape: true,
         use_print: true
@@ -144,7 +144,7 @@ Your entry number is: ${String(entryNumber).padStart(3, '0')}
 Please find attached your personalized dash sheet. Print this out and display it on your vehicle's dashboard during the event.
 
 Event Details:
-📅 June 13-15, 2025
+📅 June 19-21, 2026
 📍 Parksville – Qualicum Beach
 
 We look forward to seeing you and your vehicle at the show!
@@ -162,7 +162,7 @@ Seaside Cruizers Team`,
   <p>Please find attached your personalized <strong>dash sheet</strong>. Print this out and display it on your vehicle's dashboard during the event.</p>
   <div style="background-color: #e8f4f8; padding: 15px; border-left: 4px solid #3498db; margin: 20px 0;">
     <h3 style="margin-top: 0; color: #2c3e50;">Event Details</h3>
-    <p style="margin: 5px 0;">📅 <strong>Date:</strong> June 13-15, 2025</p>
+    <p style="margin: 5px 0;">📅 <strong>Date:</strong> June 19-21, 2026</p>
     <p style="margin: 5px 0;">📍 <strong>Location:</strong> Parksville – Qualicum Beach</p>
   </div>
   <p>We look forward to seeing you and your vehicle at the show!</p>

@@ -80,7 +80,27 @@
       <p><strong>Optional Add-On:</strong> Poker Run (+$5)</p>
     </div>
 
-    <a href="/registration.html" class="btn">Register Now</a>
+    <a href="/registration.html" class="btn" id="registerBtn">Register Now</a>
+    <script>
+      // Disable registration until June 15th
+      (function () {
+        const registerBtn = document.getElementById('registerBtn');
+        const activationDate = new Date('2026-06-15T00:00:00');
+        const now = new Date();
+
+        if (now < activationDate) {
+          registerBtn.style.backgroundColor = '#95a5a6';
+          registerBtn.style.cursor = 'not-allowed';
+          registerBtn.style.pointerEvents = 'none';
+          registerBtn.textContent = 'Registration Opens June 15, 2026';
+          registerBtn.href = '#';
+          registerBtn.onclick = function (e) {
+            e.preventDefault();
+            return false;
+          };
+        }
+      })();
+    </script>
 
     <div class="info">
       <h3>What's Included</h3>
