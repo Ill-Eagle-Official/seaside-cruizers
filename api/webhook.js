@@ -187,9 +187,26 @@ export const config = {
 export default async function handler(req, res) {
   console.log('=== WEBHOOK CALLED ===');
   console.log('Method:', req.method);
+  console.log('URL:', req.url);
+  console.log('Headers:', JSON.stringify(req.headers, null, 2));
+  
+  // Handle OPTIONS preflight (though Stripe shouldn't send these)
+  if (req.method === 'OPTIONS') {
+    return res.status(200).json({});
+  }
   
   if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' });
+    console.error(`❌ Invalid method received: ${req.method}. Expected POST.`);
+    console.error('Request details:', {
+      method: req.method,
+      url: req.url,
+      headers: Object.keys(req.headers || {})
+    });
+    return res.status(405).json({ 
+      error: 'Method not allowed',
+      received: req.method,
+      expected: 'POST'
+    });
   }
 
   const sig = req.headers['stripe-signature'];
