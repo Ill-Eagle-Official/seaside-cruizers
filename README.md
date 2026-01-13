@@ -42,6 +42,9 @@ PDFSHIFT_API_KEY=sk_...
 GOOGLE_SHEETS_ID=your-sheet-id
 GOOGLE_SERVICE_ACCOUNT_EMAIL=your-service-account@...
 GOOGLE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\n..."
+
+# Poker Run Limit (optional - defaults to 100 if not set)
+POKER_RUN_MAX_LIMIT=50
 ```
 
 ## Quick Start
