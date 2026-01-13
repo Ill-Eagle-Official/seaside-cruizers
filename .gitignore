@@ -4,3 +4,4 @@ node_modules/
 dist/
 build/ 
 google-credentials.json
+GOOGLE_SHEETS_SETUP.md
