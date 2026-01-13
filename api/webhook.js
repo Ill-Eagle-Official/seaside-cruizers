@@ -103,8 +103,13 @@ async function getEntryCount() {
     
     const data = await response.json();
     // Count rows (minus header row)
-    const rowCount = data.values ? data.values.length : 0;
-    return Math.max(1, rowCount); // Entry numbers start at 1
+    // data.values includes the header row, so subtract 1
+    // Handle empty array case: if values is [] or null/undefined
+    if (!data.values || data.values.length === 0) {
+      return 1; // First entry number
+    }
+    const rowCount = data.values.length - 1; // Subtract header row
+    return Math.max(1, rowCount + 1); // Entry numbers start at 1, so add 1 to get next entry number
   } catch (err) {
     console.error('Failed to get entry count from Google Sheets:', err);
     // Fallback
@@ -113,7 +118,7 @@ async function getEntryCount() {
 }
 
 // Helper: Add registration to Google Sheets
-async function addToGoogleSheets(data, session) {
+async function addToGoogleSheets(data, session, entryNumber) {
   if (!sheets || !auth) {
     console.log('Skipping Google Sheets - not configured');
     return null;
@@ -136,7 +141,8 @@ async function addToGoogleSheets(data, session) {
       30, // Base fee
       pokerRun ? 5 : 0, // Poker run price
       (session.amount_total / 100).toFixed(2), // Total paid
-      session.payment_intent // Payment ID
+      session.payment_intent, // Payment ID
+      String(entryNumber).padStart(3, '0') // Entry Number (formatted as 001, 002, etc.) - Column O should be formatted as Text in Google Sheets
     ];
 
     // Use a more compatible approach for the Google Sheets API
@@ -145,7 +151,7 @@ async function addToGoogleSheets(data, session) {
     // Use the raw fetch API approach to avoid Headers issues
     const accessToken = await authClient.getAccessToken();
     
-    const response = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${process.env.GOOGLE_SHEETS_ID}/values/Sheet1!A:N:append?valueInputOption=USER_ENTERED`, {
+    const response = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${process.env.GOOGLE_SHEETS_ID}/values/Sheet1!A:O:append?valueInputOption=USER_ENTERED`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${accessToken.token}`,
@@ -163,14 +169,20 @@ async function addToGoogleSheets(data, session) {
     const result = await response.json();
     console.log('Registration added to Google Sheets for', data.firstName, data.lastName);
     
-    // Return the row number (entry number)
+    // Return the actual entry number that was written to the sheet
+    // This should match the entryNumber parameter, but we return it for verification
     if (result.updates && result.updates.updatedRange) {
       const match = result.updates.updatedRange.match(/!A(\d+):/);
       if (match) {
-        return parseInt(match[1], 10) - 1; // Subtract 1 for header row
+        const actualRowNumber = parseInt(match[1], 10);
+        const actualEntryNumber = actualRowNumber - 1; // Subtract 1 for header row
+        console.log(`Row written to row ${actualRowNumber}, entry number: ${actualEntryNumber}`);
+        return actualEntryNumber;
       }
     }
-    return null;
+    // If we can't determine the row number, return the entryNumber that was passed in
+    console.warn('Could not determine actual row number from Google Sheets response, using provided entry number');
+    return entryNumber;
   } catch (err) {
     console.error('Failed to add registration to Google Sheets:', err);
     return null;
@@ -247,6 +259,8 @@ export default async function handler(req, res) {
     console.log('Session ID:', session.id);
     
     // Get the entry number first (before adding to sheets to avoid race conditions)
+    // Note: There's still a potential race condition if two webhooks arrive simultaneously,
+    // but this minimizes the window. For true atomicity, you'd need database transactions.
     let entryNumber = await getEntryCount();
     console.log('Assigned entry number:', entryNumber);
     
@@ -273,17 +287,21 @@ export default async function handler(req, res) {
       console.error('Failed to prepare admin email:', err);
     }
     
-    // Add to Google Sheets (this might update the entry number)
-    console.log('Attempting to add to Google Sheets');
-    const sheetsPromise = addToGoogleSheets(data, session).then((rowNumber) => {
-      if (rowNumber) {
-        entryNumber = rowNumber;
-        console.log('Entry number updated from Google Sheets:', entryNumber);
-      }
-    });
-    promises.push(sheetsPromise);
+    // Add to Google Sheets and get the actual entry number that was used
+    // The returned rowNumber should match entryNumber, but we use it to verify
+    console.log('Attempting to add to Google Sheets with entry number:', entryNumber);
+    const sheetsResult = await addToGoogleSheets(data, session, entryNumber);
+    if (sheetsResult !== null && sheetsResult !== undefined && sheetsResult !== entryNumber) {
+      // If the actual row number differs from what we calculated, use the actual one
+      // This can happen in rare race conditions, but we'll use what was actually written
+      console.warn(`Entry number mismatch: calculated ${entryNumber}, actual ${sheetsResult}. Using actual.`);
+      entryNumber = sheetsResult;
+    } else if (sheetsResult === null || sheetsResult === undefined) {
+      console.warn('Google Sheets did not return row number, using calculated entry number:', entryNumber);
+    }
+    console.log('Final entry number:', entryNumber);
     
-    // Wait for sheets to complete before generating PDF (to get correct entry number)
+    // Wait for email to complete
     await Promise.allSettled(promises);
     
     // Generate and send dash sheet PDF to participant
