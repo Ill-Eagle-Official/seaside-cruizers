@@ -196,6 +196,12 @@
         entryNumber: parseInt(document.getElementById('entryNumber').value, 10)
       };
 
+      // Add Poker Run number if provided
+      const pokerRunNumber = document.getElementById('pokerRunNumber').value.trim();
+      if (pokerRunNumber) {
+        data.pokerRunNumber = parseInt(pokerRunNumber, 10);
+      }
+
       // Add admin key if provided
       const adminKey = document.getElementById('adminKey').value.trim();
       if (adminKey) {

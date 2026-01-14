@@ -23,24 +23,26 @@ function populateDashSheetTemplate(data) {
     const templatePath = path.join(__dirname, '../../dashsheet.html');
     let html = fs.readFileSync(templatePath, 'utf8');
     
-    // Handle conditional Poker Run section
-    if (data.pokerRunNumber) {
-      // Replace the placeholder with the actual Poker Run number
-      const pokerRunSection = `
-    <div class="poker-run-section">
-      <div class="poker-run-label">Poker Run #</div>
-      <div class="poker-run-number">${data.pokerRunNumber}</div>
-    </div>
-    `;
-      html = html.replace(/<!--POKER_RUN_SECTION_START-->[\s\S]*?<!--POKER_RUN_SECTION_END-->/g, pokerRunSection);
-    } else {
-      // Remove the Poker Run section if not purchased
-      html = html.replace(/<!--POKER_RUN_SECTION_START-->[\s\S]*?<!--POKER_RUN_SECTION_END-->/g, '');
-    }
-    
-    // Replace placeholders with actual data
+    // Replace placeholders with actual data first
     html = html.replace(/\{\{entryNumber\}\}/g, data.entryNumber || '000');
-    html = html.replace(/\{\{pokerRunNumber\}\}/g, data.pokerRunNumber || '');
+    
+    // Handle conditional Poker Run section
+    console.log('Poker Run number in template data:', data.pokerRunNumber);
+    if (data.pokerRunNumber !== null && data.pokerRunNumber !== undefined && data.pokerRunNumber !== '') {
+      // Format Poker Run number with leading zeros
+      const formattedPokerRunNumber = String(data.pokerRunNumber).padStart(3, '0');
+      console.log('Formatted Poker Run number:', formattedPokerRunNumber);
+      // Replace the placeholder within the section
+      html = html.replace(/\{\{pokerRunNumber\}\}/g, formattedPokerRunNumber);
+      // Keep the section visible - remove the comment markers but keep the content
+      html = html.replace(/<!--POKER_RUN_SECTION_START-->/, '');
+      html = html.replace(/<!--POKER_RUN_SECTION_END-->/, '');
+    } else {
+      console.log('No Poker Run number - removing section');
+      // Remove the entire Poker Run section if not purchased
+      // Match the section including the comment markers and all content between them
+      html = html.replace(/\s*<!--POKER_RUN_SECTION_START-->[\s\S]*?<!--POKER_RUN_SECTION_END-->\s*/g, '');
+    }
     html = html.replace(/\{\{year\}\}/g, data.year || '');
     html = html.replace(/\{\{make\}\}/g, data.make || '');
     html = html.replace(/\{\{model\}\}/g, data.model || '');
