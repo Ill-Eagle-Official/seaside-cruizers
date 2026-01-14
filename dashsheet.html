@@ -86,6 +86,25 @@
       margin: 0.5rem 0;
     }
 
+    .poker-run-section {
+      margin: 1rem 0;
+      padding: 0.5rem;
+    }
+
+    .poker-run-label {
+      font-size: 1.2rem;
+      font-weight: bold;
+      margin-bottom: 0.25rem;
+      color: #2c3e50;
+    }
+
+    .poker-run-number {
+      font-size: 3rem;
+      font-weight: bold;
+      color: #e74c3c;
+      margin: 0.25rem 0;
+    }
+
     .vehicle {
       font-size: 2.2rem;
       font-weight: bold;
@@ -132,6 +151,13 @@
     </header>
 
     <div class="entry-number">{{entryNumber}}</div>
+
+    <!--POKER_RUN_SECTION_START-->
+    <div class="poker-run-section">
+      <div class="poker-run-label">Poker Run #</div>
+      <div class="poker-run-number">{{pokerRunNumber}}</div>
+    </div>
+    <!--POKER_RUN_SECTION_END-->
 
     <div class="vehicle">{{year}} {{make}} {{model}}</div>
 

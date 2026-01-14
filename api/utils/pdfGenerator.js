@@ -23,8 +23,24 @@ function populateDashSheetTemplate(data) {
     const templatePath = path.join(__dirname, '../../dashsheet.html');
     let html = fs.readFileSync(templatePath, 'utf8');
     
+    // Handle conditional Poker Run section
+    if (data.pokerRunNumber) {
+      // Replace the placeholder with the actual Poker Run number
+      const pokerRunSection = `
+    <div class="poker-run-section">
+      <div class="poker-run-label">Poker Run #</div>
+      <div class="poker-run-number">${data.pokerRunNumber}</div>
+    </div>
+    `;
+      html = html.replace(/<!--POKER_RUN_SECTION_START-->[\s\S]*?<!--POKER_RUN_SECTION_END-->/g, pokerRunSection);
+    } else {
+      // Remove the Poker Run section if not purchased
+      html = html.replace(/<!--POKER_RUN_SECTION_START-->[\s\S]*?<!--POKER_RUN_SECTION_END-->/g, '');
+    }
+    
     // Replace placeholders with actual data
     html = html.replace(/\{\{entryNumber\}\}/g, data.entryNumber || '000');
+    html = html.replace(/\{\{pokerRunNumber\}\}/g, data.pokerRunNumber || '');
     html = html.replace(/\{\{year\}\}/g, data.year || '');
     html = html.replace(/\{\{make\}\}/g, data.make || '');
     html = html.replace(/\{\{model\}\}/g, data.model || '');
@@ -54,15 +70,17 @@ function populateDashSheetTemplate(data) {
  * @param {string} registrationData.city - City
  * @param {string} registrationData.province - Province/State
  * @param {number} entryNumber - Entry number for the show
+ * @param {number|null} pokerRunNumber - Poker Run registration number (null if not purchased)
  * @returns {Promise<Buffer>} PDF buffer
  */
-export async function generateDashSheetPDF(registrationData, entryNumber) {
+export async function generateDashSheetPDF(registrationData, entryNumber, pokerRunNumber = null) {
   try {
     console.log('Generating dash sheet PDF for', registrationData.firstName, registrationData.lastName);
     
     // Prepare data for template
     const templateData = {
       entryNumber: String(entryNumber).padStart(3, '0'),
+      pokerRunNumber: pokerRunNumber ? String(pokerRunNumber).padStart(3, '0') : null,
       year: registrationData.year,
       make: registrationData.make,
       model: registrationData.model,

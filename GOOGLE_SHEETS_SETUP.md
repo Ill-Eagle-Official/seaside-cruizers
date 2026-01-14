@@ -2,14 +2,16 @@
 
 ## Column Formatting
 
-To ensure entry numbers display correctly as "001", "002", etc. (instead of being converted to 1, 2, etc.):
+To ensure entry numbers and Poker Run numbers display correctly as "001", "002", etc. (instead of being converted to 1, 2, etc.):
 
-### Option 1: Format Column O as Text (Recommended)
+### Option 1: Format Columns O and P as Text (Recommended)
 
 1. Open your Google Sheet
 2. Select Column O (the Entry Number column)
 3. Go to Format → Number → Plain text
-4. This will preserve the leading zeros (001, 002, etc.)
+4. Select Column P (the Poker Run Number column)
+5. Go to Format → Number → Plain text
+6. This will preserve the leading zeros (001, 002, etc.)
 
 ### Option 2: Use a Formula (Alternative)
 
@@ -36,6 +38,7 @@ This will automatically format the row number with leading zeros.
 - **Column M**: Total Paid
 - **Column N**: Payment Intent ID
 - **Column O**: Entry Number (formatted as 001, 002, etc.) ⚠️ **Format as Text**
+- **Column P**: Poker Run Number (formatted as 001, 002, etc., or empty if not purchased) ⚠️ **Format as Text**
 
 ## Manual Entry Instructions
 
@@ -50,7 +53,9 @@ If you need to manually enter registrations before the system starts processing 
 - The next automatic registration will get: 004
 - The system counts existing rows to determine the next entry number
 
-**Important:** If Column O is not formatted as Text, Google Sheets will convert "001" to "1". Always format the column as Text before manual entry.
+**Important:** 
+- If Column O is not formatted as Text, Google Sheets will convert "001" to "1". Always format the column as Text before manual entry.
+- If Column P is not formatted as Text, Poker Run numbers will also lose leading zeros. Format Column P as Text as well.
 
 ## Important Notes
 

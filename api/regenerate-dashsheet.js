@@ -31,6 +31,7 @@ const transporter = nodemailer.createTransport({
  *   "city": "Parksville",
  *   "province": "BC",
  *   "entryNumber": 42,
+ *   "pokerRunNumber": 15,  // Optional - only include if they purchased Poker Run
  *   "adminKey": "optional-admin-key-for-security"
  * }
  */
@@ -65,6 +66,7 @@ export default async function handler(req, res) {
       city,
       province,
       entryNumber,
+      pokerRunNumber,
       adminKey
     } = req.body;
 
@@ -112,13 +114,23 @@ export default async function handler(req, res) {
       });
     }
 
+    // Parse Poker Run number if provided
+    const pokerRunNum = pokerRunNumber ? parseInt(pokerRunNumber, 10) : null;
+    if (pokerRunNumber && (isNaN(pokerRunNum) || pokerRunNum < 1)) {
+      return res.status(400).json({
+        success: false,
+        error: 'Invalid Poker Run number. Must be a positive integer or omitted.'
+      });
+    }
+
     console.log('Original data:', rawData);
     console.log('Normalized data:', normalizedData);
     console.log('Entry number:', entryNum);
+    console.log('Poker Run number:', pokerRunNum);
 
     // Generate PDF
     console.log('Generating dash sheet PDF...');
-    const pdfBuffer = await generateDashSheetPDF(normalizedData, entryNum);
+    const pdfBuffer = await generateDashSheetPDF(normalizedData, entryNum, pokerRunNum);
     console.log('PDF generated successfully, size:', pdfBuffer.length, 'bytes');
 
     // Send email

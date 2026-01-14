@@ -117,8 +117,51 @@ async function getEntryCount() {
   }
 }
 
+// Helper: Get current Poker Run count from Google Sheets (for Poker Run registration numbers)
+async function getPokerRunCount() {
+  if (!sheets || !auth) {
+    console.log('Google Sheets not configured, using timestamp-based Poker Run number');
+    return Date.now() % 1000;
+  }
+  
+  try {
+    const authClient = await auth.getClient();
+    const accessToken = await authClient.getAccessToken();
+    
+    // Get Column J (Poker Run column, index 9)
+    const response = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${process.env.GOOGLE_SHEETS_ID}/values/Sheet1!J:J`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${accessToken.token}`,
+      }
+    });
+    
+    if (!response.ok) {
+      throw new Error(`Google Sheets API error: ${response.status} ${response.statusText}`);
+    }
+    
+    const data = await response.json();
+    
+    // Count "Yes" values (excluding header row)
+    let pokerRunCount = 0;
+    if (data.values && data.values.length > 1) {
+      for (let i = 1; i < data.values.length; i++) {
+        if (data.values[i] && data.values[i][0] === 'Yes') {
+          pokerRunCount++;
+        }
+      }
+    }
+    
+    // Return next Poker Run number (current count + 1)
+    return Math.max(1, pokerRunCount + 1);
+  } catch (err) {
+    console.error('Failed to get Poker Run count from Google Sheets:', err);
+    return Date.now() % 1000;
+  }
+}
+
 // Helper: Add registration to Google Sheets
-async function addToGoogleSheets(data, session, entryNumber) {
+async function addToGoogleSheets(data, session, entryNumber, pokerRunNumber = null) {
   if (!sheets || !auth) {
     console.log('Skipping Google Sheets - not configured');
     return null;
@@ -142,7 +185,8 @@ async function addToGoogleSheets(data, session, entryNumber) {
       pokerRun ? 5 : 0, // Poker run price
       (session.amount_total / 100).toFixed(2), // Total paid
       session.payment_intent, // Payment ID
-      String(entryNumber).padStart(3, '0') // Entry Number (formatted as 001, 002, etc.) - Column O should be formatted as Text in Google Sheets
+      String(entryNumber).padStart(3, '0'), // Entry Number (formatted as 001, 002, etc.) - Column O should be formatted as Text in Google Sheets
+      pokerRun && pokerRunNumber ? String(pokerRunNumber).padStart(3, '0') : '' // Poker Run Number (formatted as 001, 002, etc.) - Column P should be formatted as Text in Google Sheets
     ];
 
     // Use a more compatible approach for the Google Sheets API
@@ -151,7 +195,7 @@ async function addToGoogleSheets(data, session, entryNumber) {
     // Use the raw fetch API approach to avoid Headers issues
     const accessToken = await authClient.getAccessToken();
     
-    const response = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${process.env.GOOGLE_SHEETS_ID}/values/Sheet1!A:O:append?valueInputOption=USER_ENTERED`, {
+    const response = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${process.env.GOOGLE_SHEETS_ID}/values/Sheet1!A:P:append?valueInputOption=USER_ENTERED`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${accessToken.token}`,
@@ -264,6 +308,14 @@ export default async function handler(req, res) {
     let entryNumber = await getEntryCount();
     console.log('Assigned entry number:', entryNumber);
     
+    // Get Poker Run number if they purchased it
+    const pokerRun = data.pokerRun === 'true' || data.pokerRun === true;
+    let pokerRunNumber = null;
+    if (pokerRun) {
+      pokerRunNumber = await getPokerRunCount();
+      console.log('Assigned Poker Run number:', pokerRunNumber);
+    }
+    
     // Run email, Google Sheets, and PDF operations
     const promises = [];
     
@@ -289,8 +341,8 @@ export default async function handler(req, res) {
     
     // Add to Google Sheets and get the actual entry number that was used
     // The returned rowNumber should match entryNumber, but we use it to verify
-    console.log('Attempting to add to Google Sheets with entry number:', entryNumber);
-    const sheetsResult = await addToGoogleSheets(data, session, entryNumber);
+    console.log('Attempting to add to Google Sheets with entry number:', entryNumber, 'Poker Run number:', pokerRunNumber);
+    const sheetsResult = await addToGoogleSheets(data, session, entryNumber, pokerRunNumber);
     if (sheetsResult !== null && sheetsResult !== undefined && sheetsResult !== entryNumber) {
       // If the actual row number differs from what we calculated, use the actual one
       // This can happen in rare race conditions, but we'll use what was actually written
@@ -307,7 +359,7 @@ export default async function handler(req, res) {
     // Generate and send dash sheet PDF to participant
     try {
       console.log('Generating dash sheet PDF...');
-      const pdfBuffer = await generateDashSheetPDF(data, entryNumber);
+      const pdfBuffer = await generateDashSheetPDF(data, entryNumber, pokerRunNumber);
       
       console.log('Sending dash sheet PDF to participant:', data.email);
       await sendDashSheetEmail(
