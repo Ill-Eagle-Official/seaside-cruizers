@@ -15,6 +15,10 @@ export function createEmailTransporter() {
   // Check if Brevo is configured (recommended - free forever)
   if (process.env.BREVO_SMTP_KEY && process.env.BREVO_SMTP_USER) {
     console.log('📧 Using Brevo (Sendinblue) for email delivery');
+    console.log('📧 Brevo SMTP Host:', process.env.BREVO_SMTP_HOST || 'smtp-relay.brevo.com');
+    console.log('📧 Brevo SMTP Port:', process.env.BREVO_SMTP_PORT || '587');
+    console.log('📧 Brevo SMTP User:', process.env.BREVO_SMTP_USER);
+    console.log('📧 Brevo SMTP Key:', process.env.BREVO_SMTP_KEY ? '✅ Set (hidden)' : '❌ Missing');
     
     const smtpHost = process.env.BREVO_SMTP_HOST || 'smtp-relay.brevo.com';
     const smtpPort = parseInt(process.env.BREVO_SMTP_PORT || '587', 10);
@@ -31,6 +35,9 @@ export function createEmailTransporter() {
       tls: {
         rejectUnauthorized: true,
       },
+      // Add debug logging for troubleshooting
+      debug: process.env.NODE_ENV === 'development',
+      logger: process.env.NODE_ENV === 'development',
     });
   }
   
