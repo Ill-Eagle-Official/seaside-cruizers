@@ -34,6 +34,8 @@ STRIPE_WEBHOOK_SECRET=whsec_...
 # Gmail (for sending emails)
 GMAIL_USER=your-email@gmail.com
 GMAIL_PASS=your-app-password
+EMAIL_FROM_NAME=Seaside Cruizers Car Show  # Optional - friendly sender name
+EMAIL_REPLY_TO=your-email@gmail.com  # Optional - reply-to address (defaults to GMAIL_USER)
 
 # PDFShift (for PDF generation)
 PDFSHIFT_API_KEY=sk_...

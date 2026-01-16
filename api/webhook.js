@@ -323,11 +323,17 @@ export default async function handler(req, res) {
     try {
       const email = formatEmail(data, session);
       console.log('Attempting to send admin email to:', process.env.GMAIL_USER);
+      const fromName = process.env.EMAIL_FROM_NAME || 'Seaside Cruizers Car Show';
+      const fromEmail = process.env.GMAIL_USER;
       const emailPromise = transporter.sendMail({
-        from: process.env.GMAIL_USER,
+        from: `"${fromName}" <${fromEmail}>`,
         to: process.env.GMAIL_USER, // admin/club email
         subject: email.subject,
         text: email.text,
+        headers: {
+          'X-Priority': '1',
+          'Importance': 'high',
+        },
       }).then(() => {
         console.log('Admin email sent successfully');
       }).catch((err) => {

@@ -151,10 +151,23 @@ export async function sendDashSheetEmail(transporter, pdfBuffer, recipientEmail,
   try {
     console.log('Sending dash sheet email to:', recipientEmail);
     
+    // Format sender name for better deliverability
+    const fromName = process.env.EMAIL_FROM_NAME || 'Seaside Cruizers Car Show';
+    const fromEmail = process.env.GMAIL_USER;
+    const replyTo = process.env.EMAIL_REPLY_TO || process.env.GMAIL_USER;
+    
     await transporter.sendMail({
-      from: process.env.GMAIL_USER,
+      from: `"${fromName}" <${fromEmail}>`,
       to: recipientEmail,
+      replyTo: replyTo,
       subject: 'Your Seaside Cruizers Car Show Dash Sheet',
+      // Add headers to improve deliverability
+      headers: {
+        'X-Priority': '1',
+        'X-MSMail-Priority': 'High',
+        'Importance': 'high',
+        'List-Unsubscribe': `<mailto:${replyTo}?subject=Unsubscribe>`,
+      },
       text: `Hi ${recipientName},
 
 Thank you for registering for the Seaside Cruizers Father's Day Show and Shine!
@@ -194,7 +207,11 @@ Seaside Cruizers Team`,
           content: pdfBuffer,
           contentType: 'application/pdf'
         }
-      ]
+      ],
+      // Additional options for better deliverability
+      priority: 'high',
+      // Add message ID for tracking
+      messageId: `<dashsheet-${entryNumber}-${Date.now()}@seasidecruizers.com>`
     });
     
     console.log('Dash sheet email sent successfully to:', recipientEmail);
