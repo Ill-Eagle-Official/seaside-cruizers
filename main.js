@@ -76,7 +76,7 @@ const userFirstName = document.getElementById('userFirstName');
 
 form.addEventListener('submit', async function (e) {
   // TEMPORARILY DISABLED FOR TESTING - Remove this block to re-enable
-  const TESTING_MODE = true; // Set to false to re-enable registrations
+  const TESTING_MODE = false; // Set to false to re-enable registrations
   if (TESTING_MODE) {
     e.preventDefault();
     alert('Registration is temporarily disabled for testing. Please contact the administrator.');
