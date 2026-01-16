@@ -18,26 +18,37 @@ export function createEmailTransporter() {
     console.log('📧 Brevo SMTP Host:', process.env.BREVO_SMTP_HOST || 'smtp-relay.brevo.com');
     console.log('📧 Brevo SMTP Port:', process.env.BREVO_SMTP_PORT || '587');
     console.log('📧 Brevo SMTP User:', process.env.BREVO_SMTP_USER);
-    console.log('📧 Brevo SMTP Key:', process.env.BREVO_SMTP_KEY ? '✅ Set (hidden)' : '❌ Missing');
+    console.log('📧 Brevo SMTP Key length:', process.env.BREVO_SMTP_KEY ? `${process.env.BREVO_SMTP_KEY.length} chars` : '❌ Missing');
+    console.log('📧 Brevo SMTP Key starts with:', process.env.BREVO_SMTP_KEY ? process.env.BREVO_SMTP_KEY.substring(0, 4) + '...' : 'N/A');
     
     const smtpHost = process.env.BREVO_SMTP_HOST || 'smtp-relay.brevo.com';
     const smtpPort = parseInt(process.env.BREVO_SMTP_PORT || '587', 10);
     const useSSL = smtpPort === 465;
+    
+    // Brevo requires the SMTP login (which might be different from account email)
+    // The SMTP login is shown in Brevo dashboard → Settings → SMTP & API → SMTP tab
+    const smtpUser = process.env.BREVO_SMTP_USER.trim();
+    const smtpKey = process.env.BREVO_SMTP_KEY.trim();
+    
+    // Validate key format (Brevo SMTP keys are typically long alphanumeric strings)
+    if (smtpKey.length < 10) {
+      console.warn('⚠️  Warning: Brevo SMTP key seems too short. SMTP keys are typically 20+ characters.');
+    }
     
     return nodemailer.createTransport({
       host: smtpHost,
       port: smtpPort,
       secure: useSSL, // true for 465, false for other ports
       auth: {
-        user: process.env.BREVO_SMTP_USER,
-        pass: process.env.BREVO_SMTP_KEY,
+        user: smtpUser,
+        pass: smtpKey,
       },
       tls: {
         rejectUnauthorized: true,
       },
-      // Add debug logging for troubleshooting
-      debug: process.env.NODE_ENV === 'development',
-      logger: process.env.NODE_ENV === 'development',
+      // Enable debug logging to see what's happening
+      debug: true,
+      logger: true,
     });
   }
   
