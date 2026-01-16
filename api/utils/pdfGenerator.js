@@ -1,6 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { getFromEmail, getFromName, getReplyTo } from './emailTransporter.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -151,22 +152,26 @@ export async function sendDashSheetEmail(transporter, pdfBuffer, recipientEmail,
   try {
     console.log('Sending dash sheet email to:', recipientEmail);
     
-    // Format sender name for better deliverability
-    const fromName = process.env.EMAIL_FROM_NAME || 'Seaside Cruizers Car Show';
-    const fromEmail = process.env.GMAIL_USER;
-    const replyTo = process.env.EMAIL_REPLY_TO || process.env.GMAIL_USER;
+    // Get email configuration (supports both Mailgun and Gmail)
+    const fromName = getFromName();
+    const fromEmail = getFromEmail();
+    const replyTo = getReplyTo();
+    
+    // Generate unique message ID for better tracking
+    const domain = fromEmail.split('@')[1];
+    const messageId = `<dashsheet-${entryNumber}-${Date.now()}@${domain}>`;
     
     await transporter.sendMail({
       from: `"${fromName}" <${fromEmail}>`,
       to: recipientEmail,
       replyTo: replyTo,
       subject: 'Your Seaside Cruizers Car Show Dash Sheet',
-      // Add headers to improve deliverability
+      // Headers optimized for deliverability (removed priority headers that trigger spam filters)
       headers: {
-        'X-Priority': '1',
-        'X-MSMail-Priority': 'High',
-        'Importance': 'high',
+        'Message-ID': messageId,
+        'X-Mailer': 'Seaside Cruizers Registration System',
         'List-Unsubscribe': `<mailto:${replyTo}?subject=Unsubscribe>`,
+        'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
       },
       text: `Hi ${recipientName},
 
@@ -208,10 +213,8 @@ Seaside Cruizers Team`,
           contentType: 'application/pdf'
         }
       ],
-      // Additional options for better deliverability
-      priority: 'high',
-      // Add message ID for tracking
-      messageId: `<dashsheet-${entryNumber}-${Date.now()}@seasidecruizers.com>`
+      // Remove priority setting - it can trigger spam filters
+      // Let email providers determine priority naturally
     });
     
     console.log('Dash sheet email sent successfully to:', recipientEmail);

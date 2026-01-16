@@ -1,19 +1,13 @@
 import { generateDashSheetPDF, sendDashSheetEmail } from './utils/pdfGenerator.js';
 import { normalizeRegistrationData } from './utils/textNormalizer.js';
-import nodemailer from 'nodemailer';
+import { createEmailTransporter, getFromEmail } from './utils/emailTransporter.js';
 import dotenv from 'dotenv';
 
 // Load environment variables
 dotenv.config();
 
-// Email setup
-const transporter = nodemailer.createTransport({
-  service: 'gmail',
-  auth: {
-    user: process.env.GMAIL_USER,
-    pass: process.env.GMAIL_PASS,
-  },
-});
+// Email setup (supports both Mailgun and Gmail)
+const transporter = createEmailTransporter();
 
 export default async function handler(req, res) {
   // Only allow POST requests for testing
@@ -28,7 +22,7 @@ export default async function handler(req, res) {
     const rawTestData = {
       firstName: 'JOHN',  // All caps - will be normalized to "John"
       lastName: 'doe',    // All lowercase - will be normalized to "Doe"
-      email: req.body.email || process.env.GMAIL_USER,
+      email: req.body.email || getFromEmail(),
       year: '1969',
       make: 'CHEVROLET', // All caps - will be normalized to "Chevrolet"
       model: 'camaro ss', // All lowercase - will be normalized to "Camaro Ss"

@@ -18,7 +18,7 @@ Web-based registration system for the Seaside Cruizers Father's Day Car Show wit
 - **Backend**: Node.js, Express (Vercel Serverless Functions)
 - **Payment**: Stripe
 - **PDF Generation**: PDFShift API
-- **Email**: Nodemailer (Gmail)
+- **Email**: Nodemailer (Brevo recommended, Mailgun/Gmail fallback) - *Supports multiple services automatically*
 - **Database**: Google Sheets API
 - **Hosting**: Vercel
 
@@ -31,11 +31,24 @@ Required environment variables (set in Vercel Dashboard → Settings → Environ
 STRIPE_SECRET_KEY=sk_...
 STRIPE_WEBHOOK_SECRET=whsec_...
 
-# Gmail (for sending emails)
+# Email Service (choose one: Brevo recommended, Mailgun, or Gmail as fallback)
+# Brevo (recommended - 300 emails/day free FOREVER, excellent deliverability)
+BREVO_SMTP_KEY=your-smtp-key-here  # Generated from Brevo dashboard
+BREVO_SMTP_USER=your-email@example.com  # Your Brevo account email or verified sender
+BREVO_SMTP_HOST=smtp-relay.brevo.com  # Optional, defaults to this
+BREVO_SMTP_PORT=587  # Optional, defaults to 587
+EMAIL_FROM_ADDRESS=your-verified-email@example.com  # Must be verified sender
+EMAIL_FROM_NAME=Seaside Cruizers Car Show  # Optional - friendly sender name
+EMAIL_REPLY_TO=your-email@example.com  # Optional - reply-to address
+
+# Mailgun (alternative - 100 emails/day, 30-day trial)
+MAILGUN_API_KEY=key-your-api-key-here
+MAILGUN_DOMAIN=your-domain.mailgun.org
+MAILGUN_REGION=us
+
+# Gmail (fallback - only used if Brevo/Mailgun not configured)
 GMAIL_USER=your-email@gmail.com
 GMAIL_PASS=your-app-password
-EMAIL_FROM_NAME=Seaside Cruizers Car Show  # Optional - friendly sender name
-EMAIL_REPLY_TO=your-email@gmail.com  # Optional - reply-to address (defaults to GMAIL_USER)
 
 # PDFShift (for PDF generation)
 PDFSHIFT_API_KEY=sk_...
@@ -191,9 +204,36 @@ Update in `registration.html` and `api/create-checkout-session.js`:
 
 - **Vercel Hosting**: Free (Hobby plan)
 - **PDFShift**: $9/month for 250 PDFs (Starter plan)
-- **Gmail**: Free (500 emails/day)
+- **Brevo**: Free (300 emails/day forever) - *Recommended for transactional emails*
+- **Mailgun**: Free (100 emails/day, 30-day trial) - *Alternative option*
+- **Gmail**: Free (500 emails/day) - *Fallback option, not recommended for bulk sending*
 - **Stripe**: 2.9% + $0.30 per transaction
 - **Total**: ~$9/month + transaction fees
+
+## Email Deliverability
+
+**The system now supports Brevo (recommended), Mailgun, and Gmail (fallback).**
+
+### Brevo Setup (Recommended - Free Forever)
+- ✅ **300 emails/day free FOREVER** - Perfect for your usage (~50 emails/day)
+- ✅ **6x your current usage** - Plenty of headroom
+- ✅ **Excellent deliverability** - Designed for transactional emails
+- ✅ **No spam filtering issues** - Professional email infrastructure
+- 📖 **See `BREVO_MIGRATION_GUIDE.md`** - Complete setup instructions
+- 📖 **See `BREVO_QUICK_START.md`** - Quick 5-minute setup
+
+### Mailgun (Alternative)
+- ⚠️ **100 emails/day** - But only free for 30 days
+- ✅ **Good deliverability** - Professional email infrastructure
+- 📖 **See `MAILGUN_MIGRATION_GUIDE.md`** - Setup instructions
+
+### Gmail (Fallback)
+- ⚠️ **Not recommended** - Gmail is not designed for bulk transactional emails
+- ⚠️ **Spam filtering issues** - Emails often go to spam folders
+- ✅ **Code improvements implemented** - Removed spam-triggering headers, improved email structure
+- 📖 **See `IMMEDIATE_EMAIL_FIXES.md`** - For troubleshooting Gmail issues
+
+**The system automatically uses Brevo if configured, then Mailgun, then Gmail as fallback.**
 
 ## Troubleshooting
 
@@ -202,10 +242,25 @@ Update in `registration.html` and `api/create-checkout-session.js`:
 - Check PDFShift dashboard for errors
 - Review Vercel logs: `vercel logs --follow`
 
-### Email Not Sent
-- Verify `GMAIL_USER` and `GMAIL_PASS` are correct
-- Check spam folder
-- Ensure Gmail app password (not regular password)
+### Email Not Sent / Going to Spam
+- **If using Brevo (recommended):**
+  - Verify `BREVO_SMTP_KEY` and `BREVO_SMTP_USER` are set in Vercel
+  - Check Brevo dashboard → Statistics → Email activity for delivery status
+  - Ensure sender email is verified in Brevo dashboard
+  - See `BREVO_MIGRATION_GUIDE.md` for setup instructions
+- **If using Mailgun:**
+  - Verify `MAILGUN_API_KEY` and `MAILGUN_DOMAIN` are correct
+  - Check Mailgun dashboard → Sending → Logs for delivery status
+  - Ensure domain is verified (or recipient is authorized if using sandbox)
+  - See `MAILGUN_MIGRATION_GUIDE.md` for setup instructions
+- **If using Gmail (fallback):**
+  - Verify `GMAIL_USER` and `GMAIL_PASS` are correct
+  - Check spam folder (common issue with Gmail)
+  - Ensure Gmail app password (not regular password)
+  - **Important:** Gmail is not designed for bulk transactional emails. Consider switching to Brevo for better deliverability
+- See `BREVO_MIGRATION_GUIDE.md` for Brevo setup (recommended)
+- See `MAILGUN_MIGRATION_GUIDE.md` for Mailgun setup
+- See `IMMEDIATE_EMAIL_FIXES.md` for recent code improvements
 
 ### Entry Numbers Not Sequential
 - Verify Google Sheets is connected

@@ -1,19 +1,13 @@
 import { generateDashSheetPDF, sendDashSheetEmail } from './utils/pdfGenerator.js';
 import { normalizeRegistrationData } from './utils/textNormalizer.js';
-import nodemailer from 'nodemailer';
+import { createEmailTransporter } from './utils/emailTransporter.js';
 import dotenv from 'dotenv';
 
 // Load environment variables
 dotenv.config();
 
-// Email setup
-const transporter = nodemailer.createTransport({
-  service: 'gmail',
-  auth: {
-    user: process.env.GMAIL_USER,
-    pass: process.env.GMAIL_PASS,
-  },
-});
+// Email setup (supports both Mailgun and Gmail)
+const transporter = createEmailTransporter();
 
 /**
  * Manual dash sheet regeneration endpoint
@@ -100,7 +94,9 @@ export default async function handler(req, res) {
       make: make.trim(),
       model: model.trim(),
       city: city.trim(),
-      province: province.trim()
+      province: province.trim(),
+      pokerRunNumber: pokerRunNumber ? parseInt(pokerRunNumber, 10) : null
+
     };
 
     // Normalize the data (same as webhook does)

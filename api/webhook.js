@@ -1,9 +1,9 @@
 import Stripe from 'stripe';
-import nodemailer from 'nodemailer';
 import { google } from 'googleapis';
 import getRawBody from 'raw-body';
 import { generateDashSheetPDF, sendDashSheetEmail } from './utils/pdfGenerator.js';
 import { normalizeRegistrationData } from './utils/textNormalizer.js';
+import { createEmailTransporter, getFromEmail, getFromName, getReplyTo } from './utils/emailTransporter.js';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
@@ -30,19 +30,23 @@ let auth = null;
   }
 })();
 
-// Email setup
-const transporter = nodemailer.createTransport({
-  service: 'gmail',
-  auth: {
-    user: process.env.GMAIL_USER,
-    pass: process.env.GMAIL_PASS,
-  },
-});
+// Email setup (supports both Mailgun and Gmail)
+const transporter = createEmailTransporter();
 
 // Log configuration status (without exposing secrets)
 console.log('Configuration check:');
-console.log('- GMAIL_USER:', process.env.GMAIL_USER ? '✅ Set' : '❌ Missing');
-console.log('- GMAIL_PASS:', process.env.GMAIL_PASS ? '✅ Set' : '❌ Missing');
+if (process.env.BREVO_SMTP_KEY) {
+  console.log('- Email Service: ✅ Brevo (Sendinblue)');
+} else if (process.env.MAILGUN_API_KEY) {
+  console.log('- Email Service: ✅ Mailgun');
+} else if (process.env.GMAIL_USER) {
+  console.log('- Email Service: ✅ Gmail (fallback)');
+} else {
+  console.log('- Email Service: ❌ Not configured');
+}
+console.log('- BREVO_SMTP_KEY:', process.env.BREVO_SMTP_KEY ? '✅ Set' : '❌ Missing');
+console.log('- MAILGUN_DOMAIN:', process.env.MAILGUN_DOMAIN ? '✅ Set' : '❌ Missing');
+console.log('- GMAIL_USER:', process.env.GMAIL_USER ? '✅ Set (fallback)' : '❌ Missing');
 console.log('- STRIPE_WEBHOOK_SECRET:', process.env.STRIPE_WEBHOOK_SECRET ? '✅ Set' : '❌ Missing');
 console.log('- GOOGLE_SERVICE_ACCOUNT_EMAIL:', process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL ? '✅ Set' : '❌ Missing');
 console.log('- GOOGLE_PRIVATE_KEY:', process.env.GOOGLE_PRIVATE_KEY ? '✅ Set' : '❌ Missing');
@@ -322,17 +326,22 @@ export default async function handler(req, res) {
     // Send admin notification email
     try {
       const email = formatEmail(data, session);
-      console.log('Attempting to send admin email to:', process.env.GMAIL_USER);
-      const fromName = process.env.EMAIL_FROM_NAME || 'Seaside Cruizers Car Show';
-      const fromEmail = process.env.GMAIL_USER;
+      const adminEmail = process.env.ADMIN_EMAIL || process.env.GMAIL_USER || getFromEmail();
+      console.log('Attempting to send admin email to:', adminEmail);
+      const fromName = getFromName();
+      const fromEmail = getFromEmail();
+      const replyTo = getReplyTo();
+      const domain = fromEmail.split('@')[1];
+      const messageId = `<admin-notification-${Date.now()}@${domain}>`;
       const emailPromise = transporter.sendMail({
         from: `"${fromName}" <${fromEmail}>`,
-        to: process.env.GMAIL_USER, // admin/club email
+        to: adminEmail, // admin/club email
+        replyTo: replyTo,
         subject: email.subject,
         text: email.text,
         headers: {
-          'X-Priority': '1',
-          'Importance': 'high',
+          'Message-ID': messageId,
+          'X-Mailer': 'Seaside Cruizers Registration System',
         },
       }).then(() => {
         console.log('Admin email sent successfully');
