@@ -45,7 +45,9 @@ function populateDashSheetTemplate(data) {
       html = html.replace(/\s*<!--POKER_RUN_SECTION_START-->[\s\S]*?<!--POKER_RUN_SECTION_END-->\s*/g, '');
     }
     html = html.replace(/\{\{year\}\}/g, data.year || '');
-    html = html.replace(/\{\{make\}\}/g, data.make || '');
+    // Replace "Other" with empty string for make field (case-insensitive)
+    const makeValue = (data.make && data.make.toLowerCase() === 'other') ? '' : (data.make || '');
+    html = html.replace(/\{\{make\}\}/g, makeValue);
     html = html.replace(/\{\{model\}\}/g, data.model || '');
     html = html.replace(/\{\{ownerName\}\}/g, data.ownerName || '');
     html = html.replace(/\{\{city\}\}/g, data.city || '');
