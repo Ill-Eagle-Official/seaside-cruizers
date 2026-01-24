@@ -123,8 +123,34 @@ button[type="submit"] {
   transition: background 0.2s;
 }
 
-button[type="submit"]:hover, button[type="submit"]:focus {
+button[type="submit"]:hover:not(:disabled), button[type="submit"]:focus:not(:disabled) {
   background: #023e8a;
+}
+
+button[type="submit"]:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+button[type="submit"] {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.spinner {
+  display: inline-block;
+  width: 1rem;
+  height: 1rem;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  border-top-color: #fff;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
 }
 
 .hidden {

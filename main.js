@@ -9,6 +9,9 @@ const totalFee = document.getElementById('totalFee');
 const makeSelect = document.getElementById('make');
 const customMakeGroup = document.getElementById('customMakeGroup');
 const customMakeInput = document.getElementById('customMake');
+const provinceSelect = document.getElementById('province');
+const customProvinceGroup = document.getElementById('customProvinceGroup');
+const customProvinceInput = document.getElementById('customProvince');
 
 // Update pricing when poker run checkbox changes
 pokerRun.addEventListener('change', () => {
@@ -99,8 +102,17 @@ form.addEventListener('submit', async function (e) {
   }
   
   e.preventDefault();
+  
+  // Prevent double-submission
+  if (payNowBtn.disabled) {
+    return;
+  }
+  
   payNowBtn.disabled = true;
-  payNowBtn.textContent = 'Processing...';
+  const payNowText = document.getElementById('payNowText');
+  const payNowSpinner = document.getElementById('payNowSpinner');
+  if (payNowText) payNowText.textContent = 'Processing...';
+  if (payNowSpinner) payNowSpinner.classList.remove('hidden');
 
   // Collect form data
   // If "Other" is selected, use the custom make value; otherwise use the selected make
@@ -108,12 +120,17 @@ form.addEventListener('submit', async function (e) {
   const customMake = form.customMake ? form.customMake.value.trim() : '';
   const finalMake = (selectedMake === 'Other' && customMake) ? customMake : selectedMake;
   
+  // If "Other" country is selected, use custom province; otherwise use the selected province
+  const selectedCountry = form.country.value.trim();
+  const customProvince = form.customProvince ? form.customProvince.value.trim() : '';
+  const finalProvince = (selectedCountry === 'Other' && customProvince) ? customProvince : form.province.value.trim();
+  
   const formData = {
     firstName: form.firstName.value.trim(),
     lastName: form.lastName.value.trim(),
     email: form.email.value.trim(),
-    country: form.country.value.trim(),
-    province: form.province.value.trim(),
+    country: selectedCountry,
+    province: finalProvince,
     city: form.city.value.trim(),
     postalCode: form.postalCode.value.trim(),
     make: finalMake,
@@ -128,7 +145,10 @@ form.addEventListener('submit', async function (e) {
   if (!form.checkValidity()) {
     form.reportValidity();
     payNowBtn.disabled = false;
-    payNowBtn.textContent = 'Pay Now';
+    const payNowText = document.getElementById('payNowText');
+    const payNowSpinner = document.getElementById('payNowSpinner');
+    if (payNowText) payNowText.textContent = 'Pay Now';
+    if (payNowSpinner) payNowSpinner.classList.add('hidden');
     return;
   }
   
@@ -137,7 +157,24 @@ form.addEventListener('submit', async function (e) {
     alert('Please specify the make of your car.');
     customMakeInput.focus();
     payNowBtn.disabled = false;
-    payNowBtn.textContent = 'Pay Now';
+    const payNowText1 = document.getElementById('payNowText');
+    const payNowSpinner1 = document.getElementById('payNowSpinner');
+    if (payNowText1) payNowText1.textContent = 'Pay Now';
+    if (payNowSpinner1) payNowSpinner1.classList.add('hidden');
+    return;
+  }
+  
+  // Additional validation: if "Other" country is selected, custom province must be filled
+  if (selectedCountry === 'Other' && !customProvince) {
+    alert('Please specify your province, state, or region.');
+    if (customProvinceInput) {
+      customProvinceInput.focus();
+    }
+    payNowBtn.disabled = false;
+    const payNowText2 = document.getElementById('payNowText');
+    const payNowSpinner2 = document.getElementById('payNowSpinner');
+    if (payNowText2) payNowText2.textContent = 'Pay Now';
+    if (payNowSpinner2) payNowSpinner2.classList.add('hidden');
     return;
   }
 
@@ -178,9 +215,20 @@ form.addEventListener('submit', async function (e) {
       throw new Error('No Stripe URL returned');
     }
   } catch (err) {
+    console.error('Registration error:', err);
     errorMessage.classList.remove('hidden');
+    errorMessage.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     payNowBtn.disabled = false;
-    payNowBtn.textContent = 'Pay Now';
+    const payNowText = document.getElementById('payNowText');
+    const payNowSpinner = document.getElementById('payNowSpinner');
+    if (payNowText) payNowText.textContent = 'Pay Now';
+    if (payNowSpinner) payNowSpinner.classList.add('hidden');
+    
+    // Show more specific error message if available
+    const errorText = errorMessage.querySelector('p');
+    if (errorText && err.message) {
+      errorText.textContent = `There was a problem processing your payment: ${err.message}. Please try again.`;
+    }
   }
 });
 

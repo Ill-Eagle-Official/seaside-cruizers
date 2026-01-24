@@ -42,6 +42,12 @@
             <option value="">Select Country First</option>
           </select>
         </div>
+        <div class="form-group" id="customProvinceGroup" style="display: none;" role="group"
+          aria-labelledby="customProvinceLabel">
+          <label for="customProvince" id="customProvinceLabel">Please specify Province/State/Region *</label>
+          <input type="text" id="customProvince" name="customProvince" placeholder="Enter province, state, or region"
+            aria-required="true">
+        </div>
         <div class="form-group">
           <label for="city">City *</label>
           <input type="text" id="city" name="city" required>
@@ -117,9 +123,10 @@
             <option value="Other">Other</option>
           </select>
         </div>
-        <div class="form-group" id="customMakeGroup" style="display: none;">
-          <label for="customMake">Please specify the make *</label>
-          <input type="text" id="customMake" name="customMake" placeholder="Enter car make">
+        <div class="form-group" id="customMakeGroup" style="display: none;" role="group"
+          aria-labelledby="customMakeLabel">
+          <label for="customMake" id="customMakeLabel">Please specify the make *</label>
+          <input type="text" id="customMake" name="customMake" placeholder="Enter car make" aria-required="true">
         </div>
         <div class="form-group">
           <label for="model">Model *</label>
@@ -127,7 +134,7 @@
         </div>
         <div class="form-group">
           <label for="year">Year *</label>
-          <input type="number" id="year" name="year" min="1900" max="2099" pattern="\d{4}" required>
+          <input type="number" id="year" name="year" min="1900" max="2099" maxlength="4" pattern="\d{4}" required>
         </div>
       </fieldset>
       <fieldset>
@@ -158,7 +165,10 @@
         </div>
       </fieldset>
       <div class="form-actions">
-        <button type="submit" id="payNow">Pay Now</button>
+        <button type="submit" id="payNow" aria-label="Submit registration and proceed to payment">
+          <span id="payNowText">Pay Now</span>
+          <span id="payNowSpinner" class="spinner hidden" aria-hidden="true"></span>
+        </button>
       </div>
     </form>
     <div id="successMessage" class="hidden">
@@ -268,10 +278,30 @@
       } else if (selectedCountry === 'Other') {
         provinceSelect.innerHTML = '<option value="">Enter manually below</option>';
         provinceSelect.disabled = true;
-        // Allow manual entry for "Other" countries - could add a text input if needed
+        provinceSelect.required = false;
+        // Show custom province input for "Other" countries
+        const customProvinceGroup = document.getElementById('customProvinceGroup');
+        const customProvinceInput = document.getElementById('customProvince');
+        if (customProvinceGroup && customProvinceInput) {
+          customProvinceGroup.style.display = 'block';
+          customProvinceInput.required = true;
+        }
       } else {
         provinceSelect.innerHTML = '<option value="">Select Country First</option>';
         provinceSelect.disabled = true;
+        // Hide custom province input
+        const customProvinceGroup = document.getElementById('customProvinceGroup');
+        const customProvinceInput = document.getElementById('customProvince');
+        if (customProvinceGroup && customProvinceInput) {
+          customProvinceGroup.style.display = 'none';
+          customProvinceInput.required = false;
+          customProvinceInput.value = '';
+        }
+      }
+
+      // Reset province requirement when country changes
+      if (selectedCountry === 'Canada' || selectedCountry === 'United States') {
+        provinceSelect.required = true;
       }
     });
   </script>
