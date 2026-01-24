@@ -67,6 +67,7 @@
             <option value="Cadillac">Cadillac</option>
             <option value="Chevrolet">Chevrolet</option>
             <option value="Chrysler">Chrysler</option>
+            <option value="Datsun">Datsun</option>
             <option value="Dodge">Dodge</option>
             <option value="Ferrari">Ferrari</option>
             <option value="Fiat">Fiat</option>
@@ -88,8 +89,10 @@
             <option value="McLaren">McLaren</option>
             <option value="Mercedes-Benz">Mercedes-Benz</option>
             <option value="Mercury">Mercury</option>
+            <option value="MG">MG</option>
             <option value="Mini">Mini</option>
             <option value="Mitsubishi">Mitsubishi</option>
+            <option value="Nash">Nash</option>
             <option value="Nissan">Nissan</option>
             <option value="Oldsmobile">Oldsmobile</option>
             <option value="Peugeot">Peugeot</option>
@@ -102,6 +105,8 @@
             <option value="Saab">Saab</option>
             <option value="Saturn">Saturn</option>
             <option value="Scion">Scion</option>
+            <option value="Shelby">Shelby</option>
+            <option value="Studebaker">Studebaker</option>
             <option value="Subaru">Subaru</option>
             <option value="Suzuki">Suzuki</option>
             <option value="Tesla">Tesla</option>
@@ -111,6 +116,10 @@
             <option value="Volvo">Volvo</option>
             <option value="Other">Other</option>
           </select>
+        </div>
+        <div class="form-group" id="customMakeGroup" style="display: none;">
+          <label for="customMake">Please specify the make *</label>
+          <input type="text" id="customMake" name="customMake" placeholder="Enter car make">
         </div>
         <div class="form-group">
           <label for="model">Model *</label>
@@ -135,7 +144,8 @@
           <label for="pokerRun">Join the Poker Run (+$5)</label>
         </div>
         <p style="margin: 10px 0; color: #666; font-size: 0.9em;">
-          The Poker Run is a fun driving event where participants collect cards at various checkpoints to make the best poker hand!
+          The Poker Run is a fun driving event where participants collect cards at various checkpoints to make the best
+          poker hand!
         </p>
       </fieldset>
       <fieldset>
@@ -235,7 +245,7 @@
       { value: 'DC', label: 'District of Columbia (DC)' }
     ];
 
-    countrySelect.addEventListener('change', function() {
+    countrySelect.addEventListener('change', function () {
       const selectedCountry = this.value;
       provinceSelect.innerHTML = '<option value="">Select...</option>';
 

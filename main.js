@@ -6,6 +6,9 @@ const POKER_RUN_PRICE = 5;
 const pokerRun = document.getElementById('pokerRun');
 const pokerRunFee = document.getElementById('pokerRunFee');
 const totalFee = document.getElementById('totalFee');
+const makeSelect = document.getElementById('make');
+const customMakeGroup = document.getElementById('customMakeGroup');
+const customMakeInput = document.getElementById('customMake');
 
 // Update pricing when poker run checkbox changes
 pokerRun.addEventListener('change', () => {
@@ -21,6 +24,18 @@ function updatePricing() {
 
 // Initial pricing update
 updatePricing();
+
+// Handle "Other" make selection - show/hide custom make input
+makeSelect.addEventListener('change', function() {
+  if (this.value === 'Other') {
+    customMakeGroup.style.display = 'block';
+    customMakeInput.required = true;
+  } else {
+    customMakeGroup.style.display = 'none';
+    customMakeInput.required = false;
+    customMakeInput.value = ''; // Clear the value when hidden
+  }
+});
 
 // Check Poker Run availability on page load
 async function checkPokerRunAvailability() {
@@ -88,6 +103,11 @@ form.addEventListener('submit', async function (e) {
   payNowBtn.textContent = 'Processing...';
 
   // Collect form data
+  // If "Other" is selected, use the custom make value; otherwise use the selected make
+  const selectedMake = form.make.value.trim();
+  const customMake = form.customMake ? form.customMake.value.trim() : '';
+  const finalMake = (selectedMake === 'Other' && customMake) ? customMake : selectedMake;
+  
   const formData = {
     firstName: form.firstName.value.trim(),
     lastName: form.lastName.value.trim(),
@@ -96,7 +116,7 @@ form.addEventListener('submit', async function (e) {
     province: form.province.value.trim(),
     city: form.city.value.trim(),
     postalCode: form.postalCode.value.trim(),
-    make: form.make.value.trim(),
+    make: finalMake,
     model: form.model.value.trim(),
     year: form.year.value.trim(),
     clubName: form.clubName.value.trim(),
@@ -107,6 +127,15 @@ form.addEventListener('submit', async function (e) {
   // Basic client-side validation (in addition to HTML5)
   if (!form.checkValidity()) {
     form.reportValidity();
+    payNowBtn.disabled = false;
+    payNowBtn.textContent = 'Pay Now';
+    return;
+  }
+  
+  // Additional validation: if "Other" is selected, custom make must be filled
+  if (selectedMake === 'Other' && !customMake) {
+    alert('Please specify the make of your car.');
+    customMakeInput.focus();
     payNowBtn.disabled = false;
     payNowBtn.textContent = 'Pay Now';
     return;
