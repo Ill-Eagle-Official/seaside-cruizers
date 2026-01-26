@@ -42,12 +42,6 @@
             <option value="">Select Country First</option>
           </select>
         </div>
-        <div class="form-group" id="customProvinceGroup" style="display: none;" role="group"
-          aria-labelledby="customProvinceLabel">
-          <label for="customProvince" id="customProvinceLabel">Please specify Province/State/Region *</label>
-          <input type="text" id="customProvince" name="customProvince" placeholder="Enter province, state, or region"
-            aria-required="true">
-        </div>
         <div class="form-group">
           <label for="city">City *</label>
           <input type="text" id="city" name="city" required>
@@ -275,28 +269,9 @@
           provinceSelect.appendChild(option);
         });
         provinceSelect.disabled = false;
-      } else if (selectedCountry === 'Other') {
-        provinceSelect.innerHTML = '<option value="">Enter manually below</option>';
-        provinceSelect.disabled = true;
-        provinceSelect.required = false;
-        // Show custom province input for "Other" countries
-        const customProvinceGroup = document.getElementById('customProvinceGroup');
-        const customProvinceInput = document.getElementById('customProvince');
-        if (customProvinceGroup && customProvinceInput) {
-          customProvinceGroup.style.display = 'block';
-          customProvinceInput.required = true;
-        }
       } else {
         provinceSelect.innerHTML = '<option value="">Select Country First</option>';
         provinceSelect.disabled = true;
-        // Hide custom province input
-        const customProvinceGroup = document.getElementById('customProvinceGroup');
-        const customProvinceInput = document.getElementById('customProvince');
-        if (customProvinceGroup && customProvinceInput) {
-          customProvinceGroup.style.display = 'none';
-          customProvinceInput.required = false;
-          customProvinceInput.value = '';
-        }
       }
 
       // Reset province requirement when country changes

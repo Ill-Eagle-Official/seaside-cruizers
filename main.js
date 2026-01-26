@@ -9,59 +9,34 @@ const totalFee = document.getElementById('totalFee');
 const makeSelect = document.getElementById('make');
 const customMakeGroup = document.getElementById('customMakeGroup');
 const customMakeInput = document.getElementById('customMake');
-const provinceSelect = document.getElementById('province');
-const customProvinceGroup = document.getElementById('customProvinceGroup');
-const customProvinceInput = document.getElementById('customProvince');
-
-// Update pricing when poker run checkbox changes
-pokerRun.addEventListener('change', () => {
-  updatePricing();
-});
 
 // Update pricing summary
 function updatePricing() {
-  let pokerRunCost = pokerRun.checked ? POKER_RUN_PRICE : 0;
-  pokerRunFee.textContent = `$${pokerRunCost}`;
-  totalFee.textContent = `$${BASE_FEE + pokerRunCost}`;
+  let pokerRunCost = pokerRun && pokerRun.checked ? POKER_RUN_PRICE : 0;
+  if (pokerRunFee) pokerRunFee.textContent = `$${pokerRunCost}`;
+  if (totalFee) totalFee.textContent = `$${BASE_FEE + pokerRunCost}`;
+}
+
+// Update pricing when poker run checkbox changes
+if (pokerRun) {
+  pokerRun.addEventListener('change', () => {
+    updatePricing();
+  });
 }
 
 // Initial pricing update
 updatePricing();
 
 // Handle "Other" make selection - show/hide custom make input
-makeSelect.addEventListener('change', function() {
-  if (this.value === 'Other') {
-    customMakeGroup.style.display = 'block';
-    customMakeInput.required = true;
-  } else {
-    customMakeGroup.style.display = 'none';
-    customMakeInput.required = false;
-    customMakeInput.value = ''; // Clear the value when hidden
-  }
-});
-
-// Handle country selection - show/hide custom province input
-const countrySelect = document.getElementById('country');
-if (countrySelect) {
-  countrySelect.addEventListener('change', function() {
-    const selectedCountry = this.value;
-    if (selectedCountry === 'Other') {
-      if (customProvinceGroup) customProvinceGroup.style.display = 'block';
-      if (customProvinceInput) customProvinceInput.required = true;
-      if (provinceSelect) {
-        provinceSelect.required = false;
-        provinceSelect.disabled = true;
-      }
+if (makeSelect && customMakeGroup && customMakeInput) {
+  makeSelect.addEventListener('change', function() {
+    if (this.value === 'Other') {
+      customMakeGroup.style.display = 'block';
+      customMakeInput.required = true;
     } else {
-      if (customProvinceGroup) customProvinceGroup.style.display = 'none';
-      if (customProvinceInput) {
-        customProvinceInput.required = false;
-        customProvinceInput.value = ''; // Clear the value when hidden
-      }
-      if (provinceSelect) {
-        provinceSelect.required = true;
-        provinceSelect.disabled = false;
-      }
+      customMakeGroup.style.display = 'none';
+      customMakeInput.required = false;
+      customMakeInput.value = ''; // Clear the value when hidden
     }
   });
 }
@@ -146,24 +121,19 @@ form.addEventListener('submit', async function (e) {
   const customMake = form.customMake ? form.customMake.value.trim() : '';
   const finalMake = (selectedMake === 'Other' && customMake) ? customMake : selectedMake;
   
-  // If "Other" country is selected, use custom province; otherwise use the selected province
-  const selectedCountry = form.country.value.trim();
-  const customProvince = form.customProvince ? form.customProvince.value.trim() : '';
-  const finalProvince = (selectedCountry === 'Other' && customProvince) ? customProvince : form.province.value.trim();
-  
   const formData = {
     firstName: form.firstName.value.trim(),
     lastName: form.lastName.value.trim(),
     email: form.email.value.trim(),
-    country: selectedCountry,
-    province: finalProvince,
+    country: form.country.value.trim(),
+    province: form.province.value.trim(),
     city: form.city.value.trim(),
     postalCode: form.postalCode.value.trim(),
     make: finalMake,
     model: form.model.value.trim(),
     year: form.year.value.trim(),
     clubName: form.clubName.value.trim(),
-    pokerRun: pokerRun.checked,
+    pokerRun: pokerRun ? pokerRun.checked : false,
     origin: window.location.origin
   };
 
@@ -172,52 +142,13 @@ form.addEventListener('submit', async function (e) {
   // Additional validation: if "Other" is selected, custom make must be filled
   if (selectedMake === 'Other' && !customMake) {
     alert('Please specify the make of your car.');
-    customMakeInput.focus();
+    if (customMakeInput) customMakeInput.focus();
     payNowBtn.disabled = false;
     const payNowText1 = document.getElementById('payNowText');
     const payNowSpinner1 = document.getElementById('payNowSpinner');
     if (payNowText1) payNowText1.textContent = 'Pay Now';
     if (payNowSpinner1) payNowSpinner1.classList.add('hidden');
     return;
-  }
-  
-  // Additional validation: if "Other" country is selected, custom province must be filled
-  if (selectedCountry === 'Other') {
-    if (!customProvince || customProvince.trim() === '') {
-      alert('Please specify your province, state, or region.');
-      if (customProvinceInput) {
-        customProvinceInput.focus();
-      }
-      payNowBtn.disabled = false;
-      const payNowText2 = document.getElementById('payNowText');
-      const payNowSpinner2 = document.getElementById('payNowSpinner');
-      if (payNowText2) payNowText2.textContent = 'Pay Now';
-      if (payNowSpinner2) payNowSpinner2.classList.add('hidden');
-      return;
-    }
-    // Remove required from province dropdown when "Other" is selected
-    if (provinceSelect) {
-      provinceSelect.required = false;
-    }
-  } else {
-    // For Canada/US, ensure province dropdown has a value
-    const provinceValue = form.province ? form.province.value.trim() : '';
-    if (!provinceValue || provinceValue === '' || provinceValue === 'Select Country First' || provinceValue === 'Select...' || provinceValue === 'Enter manually below') {
-      alert('Please select your province or state.');
-      if (provinceSelect) {
-        provinceSelect.focus();
-      }
-      payNowBtn.disabled = false;
-      const payNowText3 = document.getElementById('payNowText');
-      const payNowSpinner3 = document.getElementById('payNowSpinner');
-      if (payNowText3) payNowText3.textContent = 'Pay Now';
-      if (payNowSpinner3) payNowSpinner3.classList.add('hidden');
-      return;
-    }
-    // Ensure province dropdown is required for Canada/US
-    if (provinceSelect) {
-      provinceSelect.required = true;
-    }
   }
   
   // Basic HTML5 validation (after custom validation)
@@ -242,7 +173,7 @@ form.addEventListener('submit', async function (e) {
     if (!response.ok) {
       // Handle Poker Run full error
       if (data.pokerRunFull) {
-        pokerRun.checked = false;
+        if (pokerRun) pokerRun.checked = false;
         updatePricing();
         checkPokerRunAvailability(); // Refresh availability
         alert('Poker Run is full. All spots have been taken. Your registration will continue without the Poker Run add-on.');
