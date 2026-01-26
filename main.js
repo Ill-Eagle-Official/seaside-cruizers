@@ -40,6 +40,32 @@ makeSelect.addEventListener('change', function() {
   }
 });
 
+// Handle country selection - show/hide custom province input
+const countrySelect = document.getElementById('country');
+if (countrySelect) {
+  countrySelect.addEventListener('change', function() {
+    const selectedCountry = this.value;
+    if (selectedCountry === 'Other') {
+      if (customProvinceGroup) customProvinceGroup.style.display = 'block';
+      if (customProvinceInput) customProvinceInput.required = true;
+      if (provinceSelect) {
+        provinceSelect.required = false;
+        provinceSelect.disabled = true;
+      }
+    } else {
+      if (customProvinceGroup) customProvinceGroup.style.display = 'none';
+      if (customProvinceInput) {
+        customProvinceInput.required = false;
+        customProvinceInput.value = ''; // Clear the value when hidden
+      }
+      if (provinceSelect) {
+        provinceSelect.required = true;
+        provinceSelect.disabled = false;
+      }
+    }
+  });
+}
+
 // Check Poker Run availability on page load
 async function checkPokerRunAvailability() {
   try {
@@ -141,16 +167,7 @@ form.addEventListener('submit', async function (e) {
     origin: window.location.origin
   };
 
-  // Basic client-side validation (in addition to HTML5)
-  if (!form.checkValidity()) {
-    form.reportValidity();
-    payNowBtn.disabled = false;
-    const payNowText = document.getElementById('payNowText');
-    const payNowSpinner = document.getElementById('payNowSpinner');
-    if (payNowText) payNowText.textContent = 'Pay Now';
-    if (payNowSpinner) payNowSpinner.classList.add('hidden');
-    return;
-  }
+  // Custom validation BEFORE HTML5 validation to handle dynamic fields properly
   
   // Additional validation: if "Other" is selected, custom make must be filled
   if (selectedMake === 'Other' && !customMake) {
@@ -165,16 +182,52 @@ form.addEventListener('submit', async function (e) {
   }
   
   // Additional validation: if "Other" country is selected, custom province must be filled
-  if (selectedCountry === 'Other' && !customProvince) {
-    alert('Please specify your province, state, or region.');
-    if (customProvinceInput) {
-      customProvinceInput.focus();
+  if (selectedCountry === 'Other') {
+    if (!customProvince || customProvince.trim() === '') {
+      alert('Please specify your province, state, or region.');
+      if (customProvinceInput) {
+        customProvinceInput.focus();
+      }
+      payNowBtn.disabled = false;
+      const payNowText2 = document.getElementById('payNowText');
+      const payNowSpinner2 = document.getElementById('payNowSpinner');
+      if (payNowText2) payNowText2.textContent = 'Pay Now';
+      if (payNowSpinner2) payNowSpinner2.classList.add('hidden');
+      return;
     }
+    // Remove required from province dropdown when "Other" is selected
+    if (provinceSelect) {
+      provinceSelect.required = false;
+    }
+  } else {
+    // For Canada/US, ensure province dropdown has a value
+    const provinceValue = form.province ? form.province.value.trim() : '';
+    if (!provinceValue || provinceValue === '' || provinceValue === 'Select Country First' || provinceValue === 'Select...' || provinceValue === 'Enter manually below') {
+      alert('Please select your province or state.');
+      if (provinceSelect) {
+        provinceSelect.focus();
+      }
+      payNowBtn.disabled = false;
+      const payNowText3 = document.getElementById('payNowText');
+      const payNowSpinner3 = document.getElementById('payNowSpinner');
+      if (payNowText3) payNowText3.textContent = 'Pay Now';
+      if (payNowSpinner3) payNowSpinner3.classList.add('hidden');
+      return;
+    }
+    // Ensure province dropdown is required for Canada/US
+    if (provinceSelect) {
+      provinceSelect.required = true;
+    }
+  }
+  
+  // Basic HTML5 validation (after custom validation)
+  if (!form.checkValidity()) {
+    form.reportValidity();
     payNowBtn.disabled = false;
-    const payNowText2 = document.getElementById('payNowText');
-    const payNowSpinner2 = document.getElementById('payNowSpinner');
-    if (payNowText2) payNowText2.textContent = 'Pay Now';
-    if (payNowSpinner2) payNowSpinner2.classList.add('hidden');
+    const payNowText = document.getElementById('payNowText');
+    const payNowSpinner = document.getElementById('payNowSpinner');
+    if (payNowText) payNowText.textContent = 'Pay Now';
+    if (payNowSpinner) payNowSpinner.classList.add('hidden');
     return;
   }
 
