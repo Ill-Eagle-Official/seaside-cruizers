@@ -6,25 +6,25 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="robots" content="noindex, nofollow">
   <title>Send dash sheet (admin) — Seaside Cruizers</title>
+  <link rel="stylesheet" href="styles.css">
   <link rel="stylesheet" href="admin-dashsheet.css">
 </head>
 
 <body>
-  <div class="wrap">
-    <header>
-      <h1>Send a dash sheet by email</h1>
-      <p class="lead">For club use only. Enter the person’s registration details as they should appear on the dash
-        sheet. The PDF will be emailed to the address you enter.</p>
-    </header>
+  <main class="page-admin-dashsheet">
+    <img src="seaside-cruizers.jpg" alt="Seaside Cruizers Logo" class="logo">
+    <h1>Send a dash sheet by email</h1>
+    <p class="admin-lead">For club use only. Enter the person’s registration details as they should appear on the
+      dash sheet. The PDF will be emailed to the address you enter.</p>
 
-    <div id="offlineNotice" class="notice hidden" role="alert">
+    <div id="offlineNotice" class="admin-notice hidden" role="alert">
       <strong>This page is not opened from the website.</strong>
       Paste your full car show website address below (for example <code>https://yoursite.vercel.app</code>), then fill
       out the form. For easiest use, bookmark this page <em>after</em> you open it from the live website.
     </div>
 
     <form id="adminForm" novalidate>
-      <div id="siteUrlRow" class="row hidden">
+      <div id="siteUrlRow" class="form-group hidden">
         <label for="siteBaseUrl">Website address (required here only)</label>
         <input type="url" id="siteBaseUrl" name="siteBaseUrl" inputmode="url" autocomplete="url"
           placeholder="https://seaside-cruizers.vercel.app" aria-describedby="siteBaseUrlHint">
@@ -33,15 +33,15 @@
 
       <fieldset>
         <legend>Person</legend>
-        <div class="row">
+        <div class="form-group">
           <label for="firstName">First name</label>
           <input type="text" id="firstName" name="firstName" required autocomplete="given-name" autocapitalize="words">
         </div>
-        <div class="row">
+        <div class="form-group">
           <label for="lastName">Last name</label>
           <input type="text" id="lastName" name="lastName" required autocomplete="family-name" autocapitalize="words">
         </div>
-        <div class="row">
+        <div class="form-group">
           <label for="email">Email (dash sheet is sent here)</label>
           <input type="email" id="email" name="email" required autocomplete="email" inputmode="email">
         </div>
@@ -49,17 +49,17 @@
 
       <fieldset>
         <legend>Vehicle</legend>
-        <div class="row">
+        <div class="form-group">
           <label for="year">Year</label>
           <input type="text" id="year" name="year" required inputmode="numeric" maxlength="4" placeholder="1969"
             aria-describedby="yearHint">
           <p id="yearHint" class="hint">Four digits, for example 1969.</p>
         </div>
-        <div class="row">
+        <div class="form-group">
           <label for="make">Make</label>
           <input type="text" id="make" name="make" required autocapitalize="words" placeholder="Chevrolet">
         </div>
-        <div class="row">
+        <div class="form-group">
           <label for="model">Model</label>
           <input type="text" id="model" name="model" required autocapitalize="words" placeholder="Impala">
         </div>
@@ -67,11 +67,11 @@
 
       <fieldset>
         <legend>Location on the dash sheet</legend>
-        <div class="row">
+        <div class="form-group">
           <label for="city">City</label>
           <input type="text" id="city" name="city" required autocapitalize="words" placeholder="Parksville">
         </div>
-        <div class="row">
+        <div class="form-group">
           <label for="province">Province or state</label>
           <input type="text" id="province" name="province" required maxlength="32" placeholder="BC or ON"
             aria-describedby="provinceHint">
@@ -81,14 +81,14 @@
 
       <fieldset>
         <legend>Show numbers</legend>
-        <div class="row">
+        <div class="form-group">
           <label for="entryNumber">Entry number</label>
           <input type="number" id="entryNumber" name="entryNumber" required min="1" step="1" inputmode="numeric"
             placeholder="42" aria-describedby="entryHint">
           <p id="entryHint" class="hint">The registration number from your list (1, 2, 42, …). It will show as 001,
             042, etc. on the sheet.</p>
         </div>
-        <div class="row">
+        <div class="form-group">
           <label for="pokerRunNumber">Poker run number <span class="label-optional">(optional)</span></label>
           <input type="number" id="pokerRunNumber" name="pokerRunNumber" min="1" step="1" inputmode="numeric"
             placeholder="Leave blank if they did not buy the poker run">
@@ -97,7 +97,7 @@
 
       <fieldset>
         <legend>Security (if your web person set this up)</legend>
-        <div class="row">
+        <div class="form-group">
           <label for="adminKey">Admin key</label>
           <input type="password" id="adminKey" name="adminKey" autocomplete="off"
             placeholder="Leave blank unless you were given a key" aria-describedby="adminKeyHint">
@@ -106,7 +106,7 @@
         </div>
       </fieldset>
 
-      <div class="actions">
+      <div class="form-actions">
         <button type="submit" id="submitBtn" aria-busy="false">
           <span id="btnLabel">Send dash sheet by email</span>
         </button>
@@ -115,12 +115,12 @@
 
     <div id="status" class="hidden" role="status" aria-live="polite"></div>
 
-    <footer>
+    <footer class="admin-footer">
       <p>Problems? Check spam/junk for the email. If it still fails, contact your web person with the red error
         message.</p>
       <p><a href="/">Back to home page</a></p>
     </footer>
-  </div>
+  </main>
 
   <script>
     (function () {
@@ -161,7 +161,7 @@
       }
 
       function showStatus(kind, title, lines) {
-        statusEl.className = kind === 'success' ? 'success' : 'error';
+        statusEl.className = (kind === 'success' ? 'success' : 'error');
         statusEl.innerHTML = '<h2>' + escapeHtml(title) + '</h2>' +
           lines.map(function (line) { return '<p>' + escapeHtml(line) + '</p>'; }).join('');
         statusEl.classList.remove('hidden');
@@ -183,7 +183,7 @@
         const endpoint = resolveApiEndpoint();
         if (!endpoint) {
           showStatus('error', 'Website address needed',
-            ['Paste the full website address in the yellow box above, then try again.']);
+            ['Paste the full website address in the box above, then try again.']);
           if (siteBaseUrlInput) siteBaseUrlInput.focus();
           return;
         }
