@@ -5,7 +5,7 @@ Web-based registration system for the Seaside Cruizers Father's Day Car Show wit
 ## Features
 
 - ✅ Online registration form with car details
-- ✅ Stripe payment integration ($30 base + optional swag)
+- ✅ Stripe payment integration ($30 base + optional Poker Run add-on)
 - ✅ Google Sheets integration for data tracking
 - ✅ Automated PDF dash sheet generation (PDFShift)
 - ✅ Email delivery to participants with dash sheet attachment
@@ -129,6 +129,9 @@ Test endpoint for PDF generation and email delivery.
 
 ### `/api/regenerate-dashsheet` (POST)
 Manually regenerate and send a dash sheet PDF. Useful for correcting errors or resending dash sheets.
+
+**Club admin UI:** After deploy, open `/admin-dashsheet.html` on your live site (bookmark it). It posts to this endpoint; set optional `ADMIN_KEY` in Vercel if you want the form to require a key.
+
 ```json
 {
   "firstName": "John",
@@ -140,10 +143,14 @@ Manually regenerate and send a dash sheet PDF. Useful for correcting errors or r
   "city": "Parksville",
   "province": "BC",
   "entryNumber": 42,
+  "pokerRunNumber": 15,
   "adminKey": "optional-admin-key"
 }
 ```
-**Note:** Set `ADMIN_KEY` environment variable for security (optional but recommended).
+
+**Note:** Set `ADMIN_KEY` in Vercel for extra protection (optional but recommended). `pokerRunNumber` is optional (omit if they did not purchase the Poker Run).
+
+**Docs:** Column layout and entry/Poker Run numbering in Google Sheets are described in `GOOGLE_SHEETS_SETUP.md` and `POKER_RUN_NUMBER_SETUP.md`.
 
 ## Development
 
@@ -158,26 +165,37 @@ Runs Express server on `http://localhost:3000`
 - **Test PDF**: Use `/api/test-dashsheet` endpoint
 - **View logs**: `vercel logs --follow`
 
+### Temporarily disable registrations (testing)
+- In `index.html` and `main.js`, set `TESTING_MODE` to `true` to block the register button and form submission; set back to `false` when you are done testing.
+
 ## File Structure
 
 ```
 seaside-cruizers/
 ├── api/
 │   ├── utils/
-│   │   ├── pdfGenerator.js      # PDF generation with PDFShift
-│   │   └── textNormalizer.js    # Text capitalization utilities
+│   │   ├── pdfGenerator.js       # PDF generation with PDFShift
+│   │   ├── textNormalizer.js     # Text capitalization utilities
+│   │   └── emailTransporter.js   # Brevo / Mailgun / Gmail SMTP
 │   ├── create-checkout-session.js
-│   ├── webhook.js               # Main registration handler
-│   └── test-dashsheet.js        # Test endpoint
-├── index.html                   # Landing page
-├── registration.html            # Registration form
-├── dashsheet.html              # PDF template
-├── main.js                     # Frontend logic
-├── styles.css                  # Styling
-├── seaside-cruizers.jpg        # Logo
-├── vercel.json                 # Vercel configuration
-├── package.json                # Dependencies
-└── README.md                   # This file
+│   ├── webhook.js                # Stripe webhook → Sheets, email, PDF
+│   ├── check-poker-run-availability.js
+│   ├── regenerate-dashsheet.js   # Manual resend dash sheet
+│   └── test-dashsheet.js         # Test PDF + email
+├── index.html
+├── registration.html
+├── admin-dashsheet.html          # Admin form → regenerate-dashsheet
+├── admin-dashsheet.css
+├── success.html
+├── dashsheet.html                # PDF template
+├── main.js
+├── styles.css
+├── robots.txt
+├── vercel.json
+├── package.json
+├── README.md
+├── GOOGLE_SHEETS_SETUP.md
+└── POKER_RUN_NUMBER_SETUP.md
 ```
 
 ## Customization
@@ -195,10 +213,7 @@ Template placeholders:
 - `{{city}}`, `{{province}}` - Location
 
 ### Change Pricing
-Update in `registration.html` and `api/create-checkout-session.js`:
-- Base registration fee
-- Hat price
-- Shirt price
+Update the base fee and Poker Run add-on in `registration.html`, `main.js`, and `api/create-checkout-session.js` so amounts stay in sync.
 
 ## Costs
 
@@ -214,26 +229,19 @@ Update in `registration.html` and `api/create-checkout-session.js`:
 
 **The system now supports Brevo (recommended), Mailgun, and Gmail (fallback).**
 
-### Brevo Setup (Recommended - Free Forever)
-- ✅ **300 emails/day free FOREVER** - Perfect for your usage (~50 emails/day)
-- ✅ **6x your current usage** - Plenty of headroom
-- ✅ **Excellent deliverability** - Designed for transactional emails
-- ✅ **No spam filtering issues** - Professional email infrastructure
-- 📖 **See `BREVO_MIGRATION_GUIDE.md`** - Complete setup instructions
-- 📖 **See `BREVO_QUICK_START.md`** - Quick 5-minute setup
+### Brevo (recommended)
+- **300 emails/day** on the free tier, aimed at transactional mail
+- In Brevo, create an **SMTP key** (not your account password) and use it as `BREVO_SMTP_KEY`
+- `BREVO_SMTP_USER` must match the SMTP login Brevo shows (often your account email or verified sender)
+- Verify the **sender** you use in `EMAIL_FROM_ADDRESS` (or equivalent) in the Brevo dashboard
 
-### Mailgun (Alternative)
-- ⚠️ **100 emails/day** - But only free for 30 days
-- ✅ **Good deliverability** - Professional email infrastructure
-- 📖 **See `MAILGUN_MIGRATION_GUIDE.md`** - Setup instructions
+### Mailgun (alternative)
+- Set `MAILGUN_API_KEY` and `MAILGUN_DOMAIN` per the env block above; verify the domain in Mailgun if required
 
-### Gmail (Fallback)
-- ⚠️ **Not recommended** - Gmail is not designed for bulk transactional emails
-- ⚠️ **Spam filtering issues** - Emails often go to spam folders
-- ✅ **Code improvements implemented** - Removed spam-triggering headers, improved email structure
-- 📖 **See `IMMEDIATE_EMAIL_FIXES.md`** - For troubleshooting Gmail issues
+### Gmail (fallback only)
+- Not ideal for bulk mail; messages often land in spam. Prefer Brevo or Mailgun for production.
 
-**The system automatically uses Brevo if configured, then Mailgun, then Gmail as fallback.**
+**Order of use:** Brevo if `BREVO_SMTP_KEY` and `BREVO_SMTP_USER` are set, else Mailgun if configured, else Gmail.
 
 ## Troubleshooting
 
@@ -243,24 +251,10 @@ Update in `registration.html` and `api/create-checkout-session.js`:
 - Review Vercel logs: `vercel logs --follow`
 
 ### Email Not Sent / Going to Spam
-- **If using Brevo (recommended):**
-  - Verify `BREVO_SMTP_KEY` and `BREVO_SMTP_USER` are set in Vercel
-  - Check Brevo dashboard → Statistics → Email activity for delivery status
-  - Ensure sender email is verified in Brevo dashboard
-  - See `BREVO_MIGRATION_GUIDE.md` for setup instructions
-- **If using Mailgun:**
-  - Verify `MAILGUN_API_KEY` and `MAILGUN_DOMAIN` are correct
-  - Check Mailgun dashboard → Sending → Logs for delivery status
-  - Ensure domain is verified (or recipient is authorized if using sandbox)
-  - See `MAILGUN_MIGRATION_GUIDE.md` for setup instructions
-- **If using Gmail (fallback):**
-  - Verify `GMAIL_USER` and `GMAIL_PASS` are correct
-  - Check spam folder (common issue with Gmail)
-  - Ensure Gmail app password (not regular password)
-  - **Important:** Gmail is not designed for bulk transactional emails. Consider switching to Brevo for better deliverability
-- See `BREVO_MIGRATION_GUIDE.md` for Brevo setup (recommended)
-- See `MAILGUN_MIGRATION_GUIDE.md` for Mailgun setup
-- See `IMMEDIATE_EMAIL_FIXES.md` for recent code improvements
+- **Brevo:** Confirm `BREVO_SMTP_KEY` is the **SMTP key** from Brevo (not the account password). Confirm `BREVO_SMTP_USER` matches Brevo’s SMTP login. If you see **535 / authentication failed**, generate a new SMTP key and update both values; ensure the from-address is verified in Brevo.
+- **Mailgun:** Check `MAILGUN_API_KEY`, `MAILGUN_DOMAIN`, and regional settings; review sending logs in the Mailgun dashboard.
+- **Gmail:** Use an **app password** if 2FA is on; expect more spam-folder placement than with Brevo/Mailgun.
+- **Recipients:** Ask them to check spam/junk; inbox rules can hide transactional mail even when delivery succeeds.
 
 ### Entry Numbers Not Sequential
 - Verify Google Sheets is connected

@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Send dash sheet (admin) — Seaside Cruizers</title>
+  <link rel="stylesheet" href="admin-dashsheet.css">
+</head>
+
+<body>
+  <div class="wrap">
+    <header>
+      <h1>Send a dash sheet by email</h1>
+      <p class="lead">For club use only. Enter the person’s registration details as they should appear on the dash
+        sheet. The PDF will be emailed to the address you enter.</p>
+    </header>
+
+    <div id="offlineNotice" class="notice hidden" role="alert">
+      <strong>This page is not opened from the website.</strong>
+      Paste your full car show website address below (for example <code>https://yoursite.vercel.app</code>), then fill
+      out the form. For easiest use, bookmark this page <em>after</em> you open it from the live website.
+    </div>
+
+    <form id="adminForm" novalidate>
+      <div id="siteUrlRow" class="row hidden">
+        <label for="siteBaseUrl">Website address (required here only)</label>
+        <input type="url" id="siteBaseUrl" name="siteBaseUrl" inputmode="url" autocomplete="url"
+          placeholder="https://seaside-cruizers.vercel.app" aria-describedby="siteBaseUrlHint">
+        <p id="siteBaseUrlHint" class="hint">No slash at the end. This tells the form where to send the request.</p>
+      </div>
+
+      <fieldset>
+        <legend>Person</legend>
+        <div class="row">
+          <label for="firstName">First name</label>
+          <input type="text" id="firstName" name="firstName" required autocomplete="given-name" autocapitalize="words">
+        </div>
+        <div class="row">
+          <label for="lastName">Last name</label>
+          <input type="text" id="lastName" name="lastName" required autocomplete="family-name" autocapitalize="words">
+        </div>
+        <div class="row">
+          <label for="email">Email (dash sheet is sent here)</label>
+          <input type="email" id="email" name="email" required autocomplete="email" inputmode="email">
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>Vehicle</legend>
+        <div class="row">
+          <label for="year">Year</label>
+          <input type="text" id="year" name="year" required inputmode="numeric" maxlength="4" placeholder="1969"
+            aria-describedby="yearHint">
+          <p id="yearHint" class="hint">Four digits, for example 1969.</p>
+        </div>
+        <div class="row">
+          <label for="make">Make</label>
+          <input type="text" id="make" name="make" required autocapitalize="words" placeholder="Chevrolet">
+        </div>
+        <div class="row">
+          <label for="model">Model</label>
+          <input type="text" id="model" name="model" required autocapitalize="words" placeholder="Impala">
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>Location on the dash sheet</legend>
+        <div class="row">
+          <label for="city">City</label>
+          <input type="text" id="city" name="city" required autocapitalize="words" placeholder="Parksville">
+        </div>
+        <div class="row">
+          <label for="province">Province or state</label>
+          <input type="text" id="province" name="province" required maxlength="32" placeholder="BC or ON"
+            aria-describedby="provinceHint">
+          <p id="provinceHint" class="hint">Use the short code if you like (BC, ON) or full name.</p>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>Show numbers</legend>
+        <div class="row">
+          <label for="entryNumber">Entry number</label>
+          <input type="number" id="entryNumber" name="entryNumber" required min="1" step="1" inputmode="numeric"
+            placeholder="42" aria-describedby="entryHint">
+          <p id="entryHint" class="hint">The registration number from your list (1, 2, 42, …). It will show as 001,
+            042, etc. on the sheet.</p>
+        </div>
+        <div class="row">
+          <label for="pokerRunNumber">Poker run number <span class="label-optional">(optional)</span></label>
+          <input type="number" id="pokerRunNumber" name="pokerRunNumber" min="1" step="1" inputmode="numeric"
+            placeholder="Leave blank if they did not buy the poker run">
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>Security (if your web person set this up)</legend>
+        <div class="row">
+          <label for="adminKey">Admin key</label>
+          <input type="password" id="adminKey" name="adminKey" autocomplete="off"
+            placeholder="Leave blank unless you were given a key" aria-describedby="adminKeyHint">
+          <p id="adminKeyHint" class="hint">If you always get an “Unauthorized” error, your web person may have turned
+            on a key—ask them for it and enter it here. Otherwise leave this blank.</p>
+        </div>
+      </fieldset>
+
+      <div class="actions">
+        <button type="submit" id="submitBtn" aria-busy="false">
+          <span id="btnLabel">Send dash sheet by email</span>
+        </button>
+      </div>
+    </form>
+
+    <div id="status" class="hidden" role="status" aria-live="polite"></div>
+
+    <footer>
+      <p>Problems? Check spam/junk for the email. If it still fails, contact your web person with the red error
+        message.</p>
+      <p><a href="/">Back to home page</a></p>
+    </footer>
+  </div>
+
+  <script>
+    (function () {
+      const form = document.getElementById('adminForm');
+      const submitBtn = document.getElementById('submitBtn');
+      const btnLabel = document.getElementById('btnLabel');
+      const statusEl = document.getElementById('status');
+      const offlineNotice = document.getElementById('offlineNotice');
+      const siteUrlRow = document.getElementById('siteUrlRow');
+      const siteBaseUrlInput = document.getElementById('siteBaseUrl');
+
+      function isHostedPage() {
+        return window.location.protocol === 'http:' || window.location.protocol === 'https:';
+      }
+
+      function resolveApiEndpoint() {
+        if (isHostedPage()) {
+          return window.location.origin.replace(/\/$/, '') + '/api/regenerate-dashsheet';
+        }
+        const raw = (siteBaseUrlInput && siteBaseUrlInput.value) ? siteBaseUrlInput.value.trim() : '';
+        if (!raw) return null;
+        return raw.replace(/\/$/, '') + '/api/regenerate-dashsheet';
+      }
+
+      if (!isHostedPage()) {
+        offlineNotice.classList.remove('hidden');
+        siteUrlRow.classList.remove('hidden');
+      }
+
+      function setLoading(loading) {
+        submitBtn.disabled = loading;
+        submitBtn.setAttribute('aria-busy', loading ? 'true' : 'false');
+        if (loading) {
+          btnLabel.innerHTML = '<span class="spinner" aria-hidden="true"></span> Sending… please wait';
+        } else {
+          btnLabel.textContent = 'Send dash sheet by email';
+        }
+      }
+
+      function showStatus(kind, title, lines) {
+        statusEl.className = kind === 'success' ? 'success' : 'error';
+        statusEl.innerHTML = '<h2>' + escapeHtml(title) + '</h2>' +
+          lines.map(function (line) { return '<p>' + escapeHtml(line) + '</p>'; }).join('');
+        statusEl.classList.remove('hidden');
+        statusEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }
+
+      function escapeHtml(s) {
+        return String(s)
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;');
+      }
+
+      form.addEventListener('submit', async function (e) {
+        e.preventDefault();
+        statusEl.classList.add('hidden');
+
+        const endpoint = resolveApiEndpoint();
+        if (!endpoint) {
+          showStatus('error', 'Website address needed',
+            ['Paste the full website address in the yellow box above, then try again.']);
+          if (siteBaseUrlInput) siteBaseUrlInput.focus();
+          return;
+        }
+
+        const firstName = document.getElementById('firstName').value.trim();
+        const lastName = document.getElementById('lastName').value.trim();
+        const email = document.getElementById('email').value.trim();
+        const year = document.getElementById('year').value.trim();
+        const make = document.getElementById('make').value.trim();
+        const model = document.getElementById('model').value.trim();
+        const city = document.getElementById('city').value.trim();
+        const province = document.getElementById('province').value.trim();
+        const entryRaw = document.getElementById('entryNumber').value.trim();
+        const pokerRaw = document.getElementById('pokerRunNumber').value.trim();
+        const adminKey = document.getElementById('adminKey').value.trim();
+
+        if (!firstName || !lastName || !email || !year || !make || !model || !city || !province || !entryRaw) {
+          showStatus('error', 'Missing information', ['Please fill in every field in the form before sending.']);
+          return;
+        }
+
+        const entryNumber = parseInt(entryRaw, 10);
+        if (isNaN(entryNumber) || entryNumber < 1) {
+          showStatus('error', 'Entry number', ['Entry number must be a whole number, 1 or higher.']);
+          document.getElementById('entryNumber').focus();
+          return;
+        }
+
+        const payload = {
+          firstName: firstName,
+          lastName: lastName,
+          email: email,
+          year: year,
+          make: make,
+          model: model,
+          city: city,
+          province: province,
+          entryNumber: entryNumber
+        };
+
+        if (pokerRaw) {
+          const pr = parseInt(pokerRaw, 10);
+          if (isNaN(pr) || pr < 1) {
+            showStatus('error', 'Poker run number', ['Poker run number must be a whole number, 1 or higher, or leave that box empty.']);
+            document.getElementById('pokerRunNumber').focus();
+            return;
+          }
+          payload.pokerRunNumber = pr;
+        }
+
+        if (adminKey) {
+          payload.adminKey = adminKey;
+        }
+
+        setLoading(true);
+
+        try {
+          const response = await fetch(endpoint, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          });
+
+          let result;
+          const text = await response.text();
+          try {
+            result = text ? JSON.parse(text) : {};
+          } catch (parseErr) {
+            showStatus('error', 'Unexpected reply from website',
+              ['The server did not send back readable data. Your web person may need to check the logs.', 'Technical detail: ' + text.slice(0, 200)]);
+            return;
+          }
+
+          if (response.ok && result.success) {
+            const extra = result.data
+              ? ('Sent to: ' + (result.data.email || email) + '. Entry #' + (result.data.entryNumber || String(entryNumber).padStart(3, '0')) + '.')
+              : '';
+            showStatus('success', 'Done — email sent',
+              [result.message || 'The dash sheet was sent.', extra, 'Ask the recipient to check spam or junk if they do not see it within a few minutes.']);
+          } else {
+            const msg = result.error || 'Something went wrong.';
+            const more = result.missingFields && result.missingFields.length
+              ? ('Missing: ' + result.missingFields.join(', ') + '.')
+              : (result.message || '');
+            showStatus('error', 'Could not send', [msg, more].filter(Boolean));
+          }
+        } catch (err) {
+          showStatus('error', 'Connection problem',
+            ['Your browser could not reach the website.', 'Check your internet, or confirm the website address is correct.', String(err && err.message ? err.message : err)]);
+        } finally {
+          setLoading(false);
+        }
+      });
+    })();
+  </script>
+</body>
+
+</html>

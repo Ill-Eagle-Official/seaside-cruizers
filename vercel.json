@@ -15,6 +15,11 @@
       "memory": 1024,
       "maxDuration": 30,
       "includeFiles": "dashsheet.html"
+    },
+    "api/regenerate-dashsheet.js": {
+      "memory": 1024,
+      "maxDuration": 30,
+      "includeFiles": "dashsheet.html"
     }
   }
 }
