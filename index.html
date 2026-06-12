@@ -82,37 +82,20 @@
 
     <a href="/registration.html" class="btn" id="registerBtn">Register Now</a>
     <script>
-      // TEMPORARILY DISABLED FOR TESTING - Remove this block to re-enable
       (function () {
+        const REGISTRATION_CLOSED = true; // Set to false to re-open registrations
         const registerBtn = document.getElementById('registerBtn');
-        const TESTING_MODE = false; // Set to false to re-enable registrations
 
-        if (TESTING_MODE) {
+        if (REGISTRATION_CLOSED) {
           registerBtn.style.backgroundColor = '#95a5a6';
           registerBtn.style.cursor = 'not-allowed';
           registerBtn.style.pointerEvents = 'none';
-          registerBtn.textContent = 'Registration Temporarily Disabled (Testing)';
+          registerBtn.textContent = 'Registration Closed — Event is Full';
           registerBtn.href = '#';
           registerBtn.onclick = function (e) {
             e.preventDefault();
             return false;
           };
-        } else {
-          // Original date-based disabling logic
-          const activationDate = new Date('2026-01-15T00:00:00');
-          const now = new Date();
-
-          if (now < activationDate) {
-            registerBtn.style.backgroundColor = '#95a5a6';
-            registerBtn.style.cursor = 'not-allowed';
-            registerBtn.style.pointerEvents = 'none';
-            registerBtn.textContent = 'Registration Opens January 15, 2026';
-            registerBtn.href = '#';
-            registerBtn.onclick = function (e) {
-              e.preventDefault();
-              return false;
-            };
-          }
         }
       })();
     </script>

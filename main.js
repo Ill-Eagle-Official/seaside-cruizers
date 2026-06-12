@@ -1,3 +1,6 @@
+// Set to false to re-open registrations
+const REGISTRATION_CLOSED = true;
+
 // Pricing constants
 const BASE_FEE = 30;
 const POKER_RUN_PRICE = 5;
@@ -86,6 +89,29 @@ async function checkPokerRunAvailability() {
 // Check availability when page loads
 checkPokerRunAvailability();
 
+function closeRegistration() {
+  const form = document.getElementById('registrationForm');
+  const closedMessage = document.getElementById('closedMessage');
+  const payNowBtn = document.getElementById('payNow');
+
+  if (closedMessage) closedMessage.classList.remove('hidden');
+  if (form) {
+    form.querySelectorAll('input, select, textarea, button').forEach(el => {
+      el.disabled = true;
+    });
+    form.style.opacity = '0.5';
+    form.style.pointerEvents = 'none';
+  }
+  if (payNowBtn) {
+    payNowBtn.style.backgroundColor = '#95a5a6';
+    payNowBtn.style.cursor = 'not-allowed';
+  }
+}
+
+if (REGISTRATION_CLOSED) {
+  closeRegistration();
+}
+
 // Handle form submission and Stripe Checkout
 const form = document.getElementById('registrationForm');
 const payNowBtn = document.getElementById('payNow');
@@ -94,15 +120,11 @@ const errorMessage = document.getElementById('errorMessage');
 const userFirstName = document.getElementById('userFirstName');
 
 form.addEventListener('submit', async function (e) {
-  // TEMPORARILY DISABLED FOR TESTING - Remove this block to re-enable
-  const TESTING_MODE = false; // Set to false to re-enable registrations
-  if (TESTING_MODE) {
-    e.preventDefault();
-    alert('Registration is temporarily disabled for testing. Please contact the administrator.');
+  e.preventDefault();
+
+  if (REGISTRATION_CLOSED) {
     return false;
   }
-  
-  e.preventDefault();
   
   // Prevent double-submission
   if (payNowBtn.disabled) {
@@ -171,6 +193,11 @@ form.addEventListener('submit', async function (e) {
     const data = await response.json();
     
     if (!response.ok) {
+      if (data.registrationClosed) {
+        closeRegistration();
+        return;
+      }
+
       // Handle Poker Run full error
       if (data.pokerRunFull) {
         if (pokerRun) pokerRun.checked = false;

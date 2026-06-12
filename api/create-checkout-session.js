@@ -84,6 +84,13 @@ export default async function handler(req, res) {
 
   try {
     const data = req.body;
+
+    if (process.env.REGISTRATION_CLOSED === 'true') {
+      return res.status(400).json({
+        error: 'Registration is closed. The event is full.',
+        registrationClosed: true
+      });
+    }
     
     // Validate Poker Run availability if requested
     if (data.pokerRun) {

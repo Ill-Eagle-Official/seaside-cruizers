@@ -219,6 +219,14 @@ Date/Time of Registration: ${new Date().toLocaleString('en-US', { timeZone: 'Ame
 app.post('/api/create-checkout-session', async (req, res) => {
   try {
     const data = req.body;
+
+    if (process.env.REGISTRATION_CLOSED === 'true') {
+      return res.status(400).json({
+        error: 'Registration is closed. The event is full.',
+        registrationClosed: true
+      });
+    }
+
     const amount = calculateAmount(data);
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
